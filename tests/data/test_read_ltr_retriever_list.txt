@@ -1,0 +1,3 @@
+#LTR_loc Category Motif TSD 5'_TSD 3'_TSD Internal Similarity Strand Family Superfamily Insertion_Time
+Chr10:100..200 pass motif:TGCC TSD:GGTGG 94..99 201..206 IN:105..195 0.9875 - Gypsy LTR 10000
+Chr10:100..200 pass motif:TGCC TSD:GGTGG 94..99 201..206 IN:105..195 0.9875 - Gypsy LTR 10000

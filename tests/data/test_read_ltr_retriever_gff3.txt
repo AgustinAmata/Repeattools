@@ -1,0 +1,6 @@
+##gff-version 3
+##date Wed May 20 22:34:48 UTC 2020
+##seqid source repeat_class/superfamily start end score strand phase attributes
+##sequence-region   Tzi8_chr1 1 307421186
+Tzi8_chr1	LTR_retriever	repeat_region	54481	63973	.	-	.	ID=repeat_region1;Sequence_ontology=SO:0000657;Name=Tzi8_chr1:54486..63968#LTR/Copia;motif=TGCA;tsd=GAGTG;ltr_identity=1.0000;Method=structural
+Tzi8_chr1	LTR_retriever	target_site_duplication	54481	54485	.	-	.	ID=lTSD_1;Parent=repeat_region1;Sequence_ontology=SO:0000434;Name=Tzi8_chr1:54486..63968#LTR/Copia;motif=TGCA;tsd=GAGTG;ltr_identity=1.0000;Method=structural

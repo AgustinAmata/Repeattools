@@ -25,7 +25,17 @@ class MergeIn(unittest.TestCase):
             "superfamily": "L1", "r start": "659", "r end": "870",
             "r left": "(467)", "id": "7765", "domains": None,
             "tes order": None, "tes superfamily": None, "complete": None,
-            "strand": None
+            "strand": None, "clade": None
+            }
+        assert merged_inputs[1] == {
+            "sw": "452", "per div": "30.6", "per del": "1.4",
+            "per ins": "1.4", "seqid": "Peame105C00", "start": "10027969",
+            "end": "10028180", "q left": "(45826121)", "match": "+",
+            "repeat": "rnd-5_family-987", "class": "LINE",
+            "superfamily": "L1", "r start": "659", "r end": "870",
+            "r left": "(467)", "id": "7765", "tes order": "LINE",
+            "tes superfamily": "unknown", "clade": "unknown",
+            "complete": "unknown", "strand": "+", "domains": {"RT": "LINE"}
             }
 
         

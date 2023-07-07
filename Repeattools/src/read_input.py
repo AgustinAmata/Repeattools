@@ -5,10 +5,11 @@ def merge_inputs(rm_input, te_input):
     for repeat in rm_input:
         rep_start = repeat["start"]
         rep_end = repeat["end"]
-        matching_rep = next((rep for rep in te_input if rep["start"] == rep_start and rep["end"] == rep_end), None)
+        rep_name = repeat["repeat"]
+        matching_rep = next((rep for rep in te_input if rep["start"] == rep_start and rep["end"] == rep_end and rep["repeat"] == rep_name), None)
 
         if not matching_rep:
-            key_names = ["domains", "tes order", "tes superfamily", "complete", "strand"]
+            key_names = ["domains", "tes order", "tes superfamily", "complete", "strand", "clade"]
             for key in key_names:
                 repeat[key] = None
             merged_rep = repeat

@@ -2,7 +2,7 @@ import unittest
 from csv import DictReader
 from pathlib import Path
 
-from src.input_reader import read_ltr_retriever_list
+from src.read_input import read_ltr_retriever_list
 
 class LTRRetList(unittest.TestCase):
     
@@ -16,12 +16,12 @@ class LTRRetList(unittest.TestCase):
             read_repeats = read_ltr_retriever_list(input_fhand)
 
         assert read_repeats[0] == {
-            "#LTR_loc": "Chr10:100..200", "Category": "pass",
-            "Motif":"motif:TGCC", "TSD": "TSD:GGTGG",
-            "5'_TSD":"94..99", "3'_TSD": "201..206",
-            "Internal": "IN:105..195", "Similarity": "0.9875",
-            "Strand": "-", "Family": "Gypsy", "Superfamily": "LTR",
-            "Insertion_Time": "10000"
+            "seqid": "Chr10", "start": "100", "end": "200", "category": "pass",
+            "motif":"motif:TGCC", "tsd": "TSD:GGTGG",
+            "5'_tsd":"94..99", "3'_tsd": "201..206",
+            "internal": "IN:105..195", "similarity": "0.9875",
+            "strand": "-", "family": "Gypsy", "superfamily": "LTR",
+            "insertion_time": "10000"
             }
 
 if __name__ == "__main__":

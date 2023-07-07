@@ -13,7 +13,6 @@ class RepMask(unittest.TestCase):
     def test_read_repmask(self):
         with open(self.test_path) as input_fhand:
             read_repeats = read_repeatmasker_out(input_fhand)
-        print(read_repeats[0])
         assert read_repeats[0] == {
             "sw": "25785", "per div": "14.7", "per del": "2.1",
             "per ins": "2.4", "seqid": "Peame105C00", "start": "23",

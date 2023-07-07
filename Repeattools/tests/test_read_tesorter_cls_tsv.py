@@ -4,7 +4,7 @@ from pathlib import Path
 
 from src.read_input import read_tesorter_cls_tsv
 
-class RepMask(unittest.TestCase):
+class TESort(unittest.TestCase):
 
     def setUp(self):
         test_path = Path(__file__).parent.absolute()
@@ -14,7 +14,6 @@ class RepMask(unittest.TestCase):
     def test_read_tes_tsv(self):
         with open(self.test_path) as input_fhand:
             read_repeats = read_tesorter_cls_tsv(input_fhand)
-        print(read_repeats[0])
         assert read_repeats[0] == {
             "seqid": "Peame105C00", "start": "10027969", "end": "10028180",
             "repeat": "rnd-5_family-987", "class": "LINE",

@@ -1,5 +1,25 @@
 from csv import DictReader
 
+def merge_inputs(rm_input, te_input):
+    merged_inputs = []
+    for repeat in rm_input:
+        rep_start = repeat["start"]
+        rep_end = repeat["end"]
+        matching_rep = next((rep for rep in te_input if rep["start"] == rep_start and rep["end"] == rep_end), None)
+
+        if not matching_rep:
+            key_names = ["domains", "tes order", "tes superfamily", "complete", "strand"]
+            for key in key_names:
+                repeat[key] = None
+            merged_rep = repeat
+
+        else:
+            merged_rep = repeat | matching_rep
+
+        merged_inputs.append(merged_rep)
+
+    return merged_inputs
+
 def read_ltr_retriever_list(input_fhand):
     read_repeats = []
     for repeat in DictReader(input_fhand, delimiter= " "):
@@ -81,7 +101,7 @@ def read_tesorter_cls_tsv(input_fhand):
         for domain in old_domains:
             domain_clade = domain.split("|")
             if len(domain_clade) == 1:
-                domain_clade.append("none")
+                domain_clade.append(None)
             new_domains[domain_clade[0]] = domain_clade[1]
         repeat["domains"] = new_domains
 

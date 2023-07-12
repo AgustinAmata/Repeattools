@@ -19,7 +19,7 @@ class TESort(unittest.TestCase):
             "repeat": "rnd-5_family-987", "class": "LINE",
             "superfamily": "L1", "tes order": "LINE",
             "tes superfamily": "unknown", "clade": "unknown",
-            "complete": "unknown", "strand": "+", "domains": {"RT": "LINE"}
+            "complete": "unknown", "strand": "+", "domains": [{"RT": "LINE"}]
             }
         
 if __name__ == "__main__":

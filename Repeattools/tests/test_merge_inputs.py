@@ -23,9 +23,9 @@ class MergeIn(unittest.TestCase):
             "end": "10028180", "q left": "(45826121)", "match": "+",
             "repeat": "rnd-5_family-987", "class": "LINE",
             "superfamily": "L1", "r start": "659", "r end": "870",
-            "r left": "(467)", "id": "7765", "domains": None,
-            "tes order": None, "tes superfamily": None, "complete": None,
-            "strand": None, "clade": None
+            "r left": "(467)", "id": "7765", "domains": [{"none": "none"}],
+            "tes order": "none", "tes superfamily": "none", "complete": "none",
+            "strand": "none", "clade": "none"
             }
         assert merged_inputs[1] == {
             "sw": "452", "per div": "30.6", "per del": "1.4",
@@ -34,8 +34,8 @@ class MergeIn(unittest.TestCase):
             "repeat": "rnd-5_family-987", "class": "LINE",
             "superfamily": "L1", "r start": "659", "r end": "870",
             "r left": "(467)", "id": "7765", "tes order": "LINE",
-            "tes superfamily": "unknown", "clade": "unknown",
-            "complete": "unknown", "strand": "+", "domains": {"RT": "LINE"}
+            "tes superfamily": "unknown", "clade": "LINE",
+            "complete": "unknown", "strand": "+", "domains": [{"RT": "LINE"}]
             }
 
         

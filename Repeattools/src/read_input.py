@@ -9,9 +9,10 @@ def merge_inputs(rm_input, te_input):
         matching_rep = next((rep for rep in te_input if rep["start"] == rep_start and rep["end"] == rep_end and rep["repeat"] == rep_name), None)
 
         if not matching_rep:
-            key_names = ["domains", "tes order", "tes superfamily", "complete", "strand", "clade"]
+            repeat["domains"] = [{"none": "none"}]
+            key_names = ["tes order", "tes superfamily", "complete", "strand", "clade"]
             for key in key_names:
-                repeat[key] = None
+                repeat[key] = "none"
             merged_rep = repeat
 
         else:
@@ -20,25 +21,6 @@ def merge_inputs(rm_input, te_input):
         merged_inputs.append(merged_rep)
 
     return merged_inputs
-
-def read_ltr_retriever_list(input_fhand):
-    read_repeats = []
-    for repeat in DictReader(input_fhand, delimiter= " "):
-        repeat = {k.lower():v for (k, v) in repeat.items()}
-
-        seqid_and_pos = repeat["#ltr_loc"].split(":")
-        seqid = seqid_and_pos[0]
-        pos = seqid_and_pos[1].split("..")
-        start = pos[0]
-        end = pos[1]
-
-        repeat["seqid"] = seqid
-        repeat["start"] = start
-        repeat["end"] = end
-        repeat.pop("#ltr_loc")
-        read_repeats.append(repeat)
-
-    return read_repeats
 
 def read_repeatmasker_out(input_fhand):
     fieldnames = [
@@ -71,6 +53,12 @@ def read_repeatmasker_out(input_fhand):
                 else:
                     repeat_data[fieldnames[i]] = line[i]
 
+            if repeat_data["match"] == "C":
+                true_left = repeat_data["r start"]
+                true_start = repeat_data["r left"]
+                repeat_data["r start"] = true_start
+                repeat_data["r left"] = true_left
+
             read_repeats.append(repeat_data)
 
     return read_repeats
@@ -97,13 +85,13 @@ def read_tesorter_cls_tsv(input_fhand):
         family = class_family[1]
 
         old_domains = repeat["domains"].split()
-        new_domains = {}
+        new_domains = []
 
         for domain in old_domains:
             domain_clade = domain.split("|")
             if len(domain_clade) == 1:
-                domain_clade.append(None)
-            new_domains[domain_clade[0]] = domain_clade[1]
+                domain_clade.append("none")
+            new_domains.append({domain_clade[0]: domain_clade[1]})
         repeat["domains"] = new_domains
 
         repeat["tes order"] = repeat["order"]

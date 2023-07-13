@@ -1,15 +1,29 @@
-import numpy as np
 import pandas as pd
 
 def create_df_from_parsed_input(parsed_input):
     repeats_df = pd.DataFrame(parsed_input)
     convert_dict = {
         "sw": "int64", "per div": "float64", "per del": "float64",
-        "per ins": "float64","start": "int64", "end": "int64", "r start": "int64",
-        "r end": "int64", "id": "int64"
+        "per ins": "float64","start": "int64", "end": "int64",
+        "r start": "int64", "r end": "int64", "id": "int64"
         }
     repeats_df = repeats_df.astype(convert_dict)
     return repeats_df
+
+def count_tes(input_df, depth="superfamily"):
+    counted_tes = input_df.value_counts(depth).rename(input_df.seqid[0])
+    return counted_tes
+
+def create_te_count_matrix(list_of_inputs):
+    te_count_matrix = pd.DataFrame()
+    for input in list_of_inputs:
+        te_count_matrix = pd.concat([te_count_matrix, input], axis=1)
+    te_count_matrix = te_count_matrix.fillna(0)
+    return te_count_matrix
+
+def filter_df_by_chromosomes(df_to_filter, chromosomes):
+    filtered_df = df_to_filter[df_to_filter.seqid.apply(lambda x: x in chromosomes)]
+    return filtered_df
 
 def filter_df_by_domain(df_to_filter, filter_by_domain, clades, special_features):
     filtered_df = df_to_filter[df_to_filter.domains.apply(lambda x: x != [{"none": "none"}])]

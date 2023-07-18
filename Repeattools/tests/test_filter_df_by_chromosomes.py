@@ -17,7 +17,8 @@ class FilterChrom(unittest.TestCase):
     def test_filter_chrom(self):
         with open(self.test_path) as input_fhand:
             input_fhand = pd.read_csv(input_fhand, converters={"domains": ast.literal_eval})
-            filtered_df = filter_df_by_chromosomes(input_fhand,["Peame105C00"])
+            filtered_df = filter_df_by_chromosomes(input_fhand, ["Peame105C00"])
+            excluded_df = filter_df_by_chromosomes(input_fhand, ["Peame105C01"], exclude=True)
 
         test_df = pd.DataFrame([
             {"sw": "452", "per div": "30.6","per del": "1.4","per ins": "1.4",
@@ -46,6 +47,8 @@ class FilterChrom(unittest.TestCase):
         test_df = test_df.astype(convert_dict)
 
         assert_frame_equal(filtered_df.reset_index(drop=True), test_df.reset_index(drop=True)) 
+        assert_frame_equal(excluded_df.reset_index(drop=True), test_df.reset_index(drop=True)) 
+
         
 if __name__ == "__main__":
     unittest.main()

@@ -10,8 +10,8 @@ def create_df_from_parsed_input(parsed_input):
     repeats_df = repeats_df.astype(convert_dict)
     return repeats_df
 
-def count_tes(input_df, depth="superfamily"):
-    counted_tes = input_df.value_counts(depth).rename(input_df.seqid[0])
+def count_tes(input_df, species_name, depth="superfamily"):
+    counted_tes = input_df.value_counts(depth).rename(species_name)
     return counted_tes
 
 def create_te_count_matrix(list_of_inputs):
@@ -21,16 +21,21 @@ def create_te_count_matrix(list_of_inputs):
     te_count_matrix = te_count_matrix.fillna(0)
     return te_count_matrix
 
-def filter_df_by_chromosomes(df_to_filter, chromosomes):
-    filtered_df = df_to_filter[df_to_filter.seqid.apply(lambda x: x in chromosomes)]
+def filter_df_by_chromosomes(df_to_filter, chromosomes, exclude=False):
+    if exclude:
+        filtered_df = df_to_filter[~df_to_filter.seqid.apply(lambda x: x in chromosomes)]
+
+    else:
+        filtered_df = df_to_filter[df_to_filter.seqid.apply(lambda x: x in chromosomes)]
+
     return filtered_df
 
-def filter_df_by_domain(df_to_filter, filter_by_domain, clades, special_features):
+def filter_df_by_domain(df_to_filter, doms, clades, special_features):
     filtered_df = df_to_filter[df_to_filter.domains.apply(lambda x: x != [{"none": "none"}])]
 
 #Example: ["RH", "TPase"]
-    if filter_by_domain:
-        filtered_df = filtered_df.loc[filtered_df.domains.isin(filter_by_domain)]
+    if doms:
+        filtered_df = filtered_df.loc[filtered_df.domains.apply(lambda x: any(any(feat.get(dom) for dom in doms) for feat in x))]
 
 #Example: ["Ale", "Ivana"]
     if clades:
@@ -58,9 +63,6 @@ def filter_df_by_percentages(df_to_filter, percentage="div=20.0", mode="lower_th
         if mode in modes:
             filtered_df = df_to_filter[modes[mode]]
             return filtered_df
-
-        else:
-            print("Please select between higher_than, lower_than and equal")
 
     else:
         print("Please select between div, del and ins")

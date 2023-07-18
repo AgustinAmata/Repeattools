@@ -232,8 +232,6 @@ def main():
 
         print("Finished filtering by domains")
 
-    print(species_dfs["Persea_schiedeana"])
-
     if arguments.per:
         print("Started filtering by percentage")
 

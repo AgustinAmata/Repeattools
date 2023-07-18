@@ -2,21 +2,29 @@ from csv import DictReader
 
 def merge_inputs(rm_input, te_input):
     merged_inputs = []
-    for repeat in rm_input:
-        rep_start = repeat["start"]
-        rep_end = repeat["end"]
-        rep_name = repeat["repeat"]
-        matching_rep = next((rep for rep in te_input if rep["start"] == rep_start and rep["end"] == rep_end and rep["repeat"] == rep_name), None)
+    te_index = {}
+    
+    for te_repeat in te_input:
+        te_rep_start = te_repeat["start"]
+        te_rep_end = te_repeat["end"]
+        te_rep_repeat = te_repeat["repeat"]
+        te_index[(te_rep_start, te_rep_end, te_rep_repeat)] = te_repeat
+
+    for rm_repeat in rm_input:
+        rm_rep_start = rm_repeat["start"]
+        rm_rep_end = rm_repeat["end"]
+        rm_rep_name = rm_repeat["repeat"]
+        matching_rep = te_index.get((rm_rep_start, rm_rep_end, rm_rep_name))
 
         if not matching_rep:
-            repeat["domains"] = [{"none": "none"}]
+            rm_repeat["domains"] = [{"none": "none"}]
             key_names = ["tes order", "tes superfamily", "complete", "strand", "clade"]
             for key in key_names:
-                repeat[key] = "none"
-            merged_rep = repeat
+                rm_repeat[key] = "none"
+            merged_rep = rm_repeat
 
         else:
-            merged_rep = repeat | matching_rep
+            merged_rep = rm_repeat | matching_rep
 
         merged_inputs.append(merged_rep)
 
@@ -46,10 +54,10 @@ def read_repeatmasker_out(input_fhand):
                     class_family = line[i].split("/")
                     if len(class_family) == 1:
                         class_family.append("Unknown")
-                        cls = class_family[0]
-                        superfamily = class_family[1]
-                        repeat_data["class"] = cls
-                        repeat_data["superfamily"] = superfamily
+                    cls = class_family[0]
+                    superfamily = class_family[1]
+                    repeat_data["class"] = cls
+                    repeat_data["superfamily"] = superfamily
                 else:
                     repeat_data[fieldnames[i]] = line[i]
 

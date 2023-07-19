@@ -95,9 +95,10 @@ def argument_parser():
     parser.add_argument("--depth", help=help_matrix_depth,
                         default= "superfamily", required=False)
 
-    help_output = "Output file name (default will create stdout)"
+    help_output = """Output file path. Generated file will
+    be in .csv format"""
     parser.add_argument("--output", "-o", help=help_output,
-                        default="stdout.csv", required=False)
+                        required=True)
 
     return parser
 
@@ -253,7 +254,11 @@ def main():
         species_counted_tes.append(counted_tes)
 
     te_count_matrix = create_te_count_matrix(species_counted_tes)
-    print(te_count_matrix)
+
+    out_fpath = Path(f"{arguments.output}")
+    te_count_matrix.to_csv(out_fpath)
+
+    print("TE count matrix generated")
 
 if __name__ == "__main__":
     main()

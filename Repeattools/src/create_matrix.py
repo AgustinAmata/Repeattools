@@ -19,7 +19,7 @@ def create_te_count_matrix(list_of_inputs):
     for input in list_of_inputs:
         te_count_matrix = pd.concat([te_count_matrix, input], axis=1)
     te_count_matrix = te_count_matrix.fillna(0)
-    return te_count_matrix
+    return te_count_matrix.astype("int64")
 
 def filter_df_by_chromosomes(df_to_filter, chromosomes, exclude=False):
     if exclude:
@@ -33,16 +33,12 @@ def filter_df_by_chromosomes(df_to_filter, chromosomes, exclude=False):
 def filter_df_by_domain(df_to_filter, doms, clades, special_features):
     filtered_df = df_to_filter[df_to_filter.domains.apply(lambda x: x != [{"none": "none"}])]
 
-#Example: ["RH", "TPase"]
     if doms:
         filtered_df = filtered_df.loc[filtered_df.domains.apply(lambda x: any(any(feat.get(dom) for dom in doms) for feat in x))]
 
-#Example: ["Ale", "Ivana"]
     if clades:
         filtered_df = filtered_df.loc[filtered_df.clade.isin(clades)]
 
-#Example: [{"RT": "Ale"}, {"RH": "Ogre"}]; function will return 
-#all rows in which at least one of the given elements is found in the column
     if special_features:
         filtered_df = filtered_df[filtered_df.domains.apply(lambda x: any(any(feat.items() == dom.items() for feat in special_features) for dom in x))]
 

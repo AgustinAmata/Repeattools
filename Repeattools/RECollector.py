@@ -8,16 +8,21 @@ from src.create_matrix import (create_df_from_parsed_input,
                                create_te_count_matrix,
                                count_tes, filter_df_by_chromosomes,
                                filter_df_by_domain,
+                               filter_df_by_length,
                                filter_df_by_percentages) 
 from src.read_input import (merge_inputs, read_repeatmasker_out,
                             read_tesorter_cls_tsv)
+from src.utils import (convert_data_to_long_df_div,
+                       read_chroms_file, read_doms_file,
+                       read_names_file)
+
 
 def argument_parser():
-    desc = """Create a TE count matrix from several files of
-    RepeatMasker (RM) and TESorter (TES); TESorter files must come from RM.
-    Several options are provided to filter the data from these files
-    (some of them require input files).
-    Another file with the names of the species is required"""
+    desc = """Create a TE count matrix and a divergence table 
+    from several files of RepeatMasker (RM) and TESorter (TES);
+    TESorter files must come from RM. Several options are provided
+    to filter the data from these files (some of them require input
+    files). Another file with the names of the species is required."""
     parser = argparse.ArgumentParser(description=desc)
         
     help_input_dir = """Input directory containing the files
@@ -33,6 +38,11 @@ def argument_parser():
     by a tab. Example:Peame105,Persea_americana"""
     parser.add_argument("--names", "-n", type=Path,
                         help=help_input_names_file, required=True)
+
+    help_filter_len = """Elements with less than the specified length
+    will be filtered out from the data"""
+    parser.add_argument("--length", "-l", type=int,
+                        help= help_filter_len, required=False)
 
     desc_filter_chrom = """If selected, data will be filtered to only
     contain (or exclude) the chromosomes of the species in the file.
@@ -91,11 +101,11 @@ def argument_parser():
                             nargs=1)
 
     help_matrix_depth = """Select the depth of the TE count matrix
-    (class, superfamily, etc.)"""
+    (class, superfamily, tes order, etc.)"""
     parser.add_argument("--depth", help=help_matrix_depth,
                         default= "superfamily", required=False)
 
-    help_output = """Output file path. Generated file will
+    help_output = """Output folder path. Generated files will
     be in .csv format"""
     parser.add_argument("--output", "-o", help=help_output,
                         required=True)
@@ -116,13 +126,8 @@ def main():
     te_files = te_dir.glob("*.tsv")
 
     names_file = arguments.names
-    filehand_species = {}
     with open(names_file) as names:
-        for pair in names:
-            pair = pair.strip("\n").split("\t")
-            filehand = pair[0]
-            sp_name = pair[1]
-            filehand_species[filehand] = sp_name
+        filehand_species = read_names_file(names)
         print("Read names of species file")
 
     read_inputs = {}
@@ -163,17 +168,23 @@ def main():
         species_dfs[species] = sp_df
     print("Dataframes created")
 
+    if arguments.length:
+        print("Started filtering by length")
+        length = arguments.length
+        for species in species_dfs:
+            sp_df = species_dfs[species]
+            filtered_df = filter_df_by_length(sp_df, length)
+            species_dfs.update({species:filtered_df})
+            print(f"Filtered data from {species}")
+
+        print("Finished filtering by length")
+
     if arguments.chrom:
         print("Started filtering by chromosomes")
 
         chroms_file = arguments.chrom
-        chrs_to_filter = {}
         with open(chroms_file) as chroms:
-            for species_chrom in chroms:
-                species_chrom = species_chrom.strip("\n").split("\t")
-                sp_name = species_chrom[0]
-                chrs = species_chrom[1].split(",")
-                chrs_to_filter[sp_name] = chrs
+            chrs_to_filter = read_chroms_file(chroms)
             print("Read file detailing chromosomes to filter")
 
         for species in chrs_to_filter:
@@ -190,34 +201,7 @@ def main():
         print("Started filtering by domains")
         if arguments.D:
             with open(arguments.D) as doms_file:
-                dfile_data =  DictReader(doms_file, delimiter="\t")
-                for row in dfile_data:
-                    domains = row["domains"]
-                    clades = row["clades"]
-                    features = row["features"]
-
-                    if domains:
-                        domains = domains.split(",")
-                    else:
-                        domains = []
-
-                    if clades:
-                        clades = clades.split(",")
-                    else:
-                        clades = []
-
-                    if features:
-                        features_list = features.split(",")
-                        features_dict = []
-                        for feat in features_list:
-                            feat = feat.split(":")
-                            fdom = feat[0]
-                            fclade = feat[1]
-                            dom_clade = {fdom:fclade}
-                            features_dict.append(dom_clade)
-                    else:
-                        features_dict = []
-
+                domains, clades, features_dict = read_doms_file(doms_file)
             print("Read data from additional file")
 
         else:
@@ -253,12 +237,26 @@ def main():
         counted_tes = count_tes(sp_df, species, depth)
         species_counted_tes.append(counted_tes)
 
+    print("Creating TE count matrix")
     te_count_matrix = create_te_count_matrix(species_counted_tes)
+    print("TE count matrix created")
 
-    out_fpath = Path(f"{arguments.output}")
-    te_count_matrix.to_csv(out_fpath)
+    print("Creating species divergence data")
+    long_df_div = convert_data_to_long_df_div(species_dfs, depth)
+    print("Species divergence data created")
 
-    print("TE count matrix generated")
+    out_folder = Path(arguments.output)
+    if not out_folder.exists():
+        out_folder.mkdir()
+
+    c_matrix_fpath = out_folder.joinpath(f"{out_folder.name}_count_matrix.csv")
+    div_csv_fpath = out_folder.joinpath(f"{out_folder.name}_divergence.csv")
+
+    te_count_matrix.to_csv(c_matrix_fpath, index_label= depth)
+    print("TE count matrix file generated")
+
+    long_df_div.to_csv(div_csv_fpath)
+    print("Species divergence data file generated")
 
 if __name__ == "__main__":
     main()

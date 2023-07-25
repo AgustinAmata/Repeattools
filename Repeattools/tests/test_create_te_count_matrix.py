@@ -15,7 +15,7 @@ class CreateMatrix(unittest.TestCase):
 
         te_count_matrix = create_te_count_matrix([input_fhand1, input_fhand2])
 
-        test_df = pd.DataFrame({"Persea_americana": [3, 0], "Persea_schiedeana": [0, 3]}, index=["L1", "SINE"])
+        test_df = pd.DataFrame({"Persea_americana": [3, 0], "Persea_schiedeana": [0, 3]}, index=["L1", "SINE"], dtype="int32")
 
         assert_frame_equal(te_count_matrix, test_df) 
         

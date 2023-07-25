@@ -16,10 +16,10 @@ class RepMask(unittest.TestCase):
         assert read_repeats[0] == {
             "sw": "25785", "per div": "14.7", "per del": "2.1",
             "per ins": "2.4", "seqid": "Peame105C00", "start": "23",
-            "end": "4959", "q left": "(55849342)", "match": "+",
+            "end": "4959", "q left": "55849342", "match": "+",
             "repeat": "rnd-4_family-1935", "class": "Unknown",
             "superfamily": "Unknown", "r start": "1", "r end": "4924",
-            "r left": "(0)", "id": "1"
+            "r left": "0", "id": "1", "length": 4936
             }
         
 if __name__ == "__main__":

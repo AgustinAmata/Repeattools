@@ -1,0 +1,4 @@
+sw,per div,per del,per ins,seqid,start,end,q left,match,repeat,class,superfamily,r start,r end,r left,id,domains,tes order,tes superfamily,complete,strand,clade,length
+452,30.6,1.4,1.4,Peame105C00,10027900,10028180,45826121,+,rnd-5_family-987,LINE,L1,659,870,467,7765,[{'none': 'none'}],none,none,none,none,none,280
+452,30.6,1.4,1.4,Peame105C00,10027969,10028180,45826121,+,rnd-5_family-987,LINE,L1,659,870,467,7765,[{'RT': 'LINE'}],LINE,unknown,unknown,+,LINE,211
+452,30.6,1.4,1.4,Peame105C01,10027969,10028180,45826121,+,rnd-5_family-987,LINE,L1,659,870,467,7765,"[{'RT': 'Ale'}, {'RH': 'Ale'}]",LINE,unknown,unknown,+,Ale,211

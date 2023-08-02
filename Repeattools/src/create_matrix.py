@@ -18,6 +18,9 @@ def create_df_from_parsed_input(parsed_input):
 #can be used as the name of the column when combining different
 #series
 def count_tes(input_df, species_name, depth="superfamily"):
+    if depth == "domains":
+        input_df["domains"] = input_df['domains'].apply(lambda x: ','.join(map(str, x)))
+
     counted_tes = input_df.value_counts(depth).rename(species_name)
     return counted_tes
 

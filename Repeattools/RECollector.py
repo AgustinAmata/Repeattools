@@ -101,9 +101,12 @@ def argument_parser():
                             nargs=1)
 
     help_matrix_depth = """Select the depth of the TE count matrix
-    (class, superfamily, tes order, etc.)"""
+    (class, superfamily, tes order, tes superfamily, clade, domains)"""
+    depth_choices = ["superfamily","class", "tes order",
+                     "tes superfamily", "clade", "domains"]
     parser.add_argument("--depth", help=help_matrix_depth,
-                        default= "superfamily", required=False)
+                        choices=depth_choices,
+                        default="superfamily", required=False)
 
     help_output = """Output folder path. Generated files will
     be in .csv format"""

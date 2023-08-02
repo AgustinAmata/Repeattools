@@ -12,6 +12,18 @@ def convert_data_to_long_df_div(species_dfs, depth):
     long_df_div = long_df_div.reset_index(drop=True)
     return long_df_div
 
+def get_large_dfs(file, transpose=False):
+    df_chunk = pd.read_csv(file, header=0, index_col=0, chunksize=1000000)
+    chunk_list = []
+    for chunk in df_chunk:
+        chunk_list.append(chunk)
+
+    df_concat = pd.concat(chunk_list)
+    if transpose:
+        df_concat = df_concat.T
+
+    return df_concat
+
 #Reads the file for chromosome filtering
 def read_chroms_file(chr_file):
     chrs_to_filter = {}
@@ -54,7 +66,8 @@ def read_doms_file(doms_file):
 
     return domains, clades, features_dict
 
-#Reads the file for species name-file name association
+#Reads the file for species name-file name association,
+#also applicable for group name file in REVisualizer
 def read_names_file(names_file):
     filehand_species = {}
     for pair in names_file:

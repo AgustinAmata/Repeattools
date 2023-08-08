@@ -60,7 +60,8 @@ def get_divergence_violins(div_df, tree_fpath, out_folder):
         width, height = plt.rcParams.get("figure.figsize")
         fig, axs = plt.subplots(1, len(cats),
                                 figsize=(len(cats)*2, height*2),
-                                sharey=True, constrained_layout=True)
+                                sharey=True, sharex=True,
+                                constrained_layout=True)
 
         n_species = sorted(div_df.species.unique())
         first_axes = True
@@ -110,9 +111,12 @@ def get_divergence_violins(div_df, tree_fpath, out_folder):
         ymax *= 1.05
 
         n_species = tree.get_leaf_names()
-
+        ax2 = fig.add_subplot(gs[2], sharey=ax1)
         for cat, i in zip(cats, range(2, len(cats)+2)):
-            ax = fig.add_subplot(gs[i], sharey=ax1)
+            if i == 2:
+                ax = ax2
+            else:
+                ax = fig.add_subplot(gs[i], sharey=ax1, sharex=ax2)
             cat_df = div_df[div_df[cat_name] == cat]
             sp_in_df = list(cat_df["species"].unique())
             for species in n_species:
@@ -122,7 +126,7 @@ def get_divergence_violins(div_df, tree_fpath, out_folder):
                     cat_df = pd.concat([cat_df, empty_df])
 
             sns.violinplot(data=cat_df, x="per div", y="species",
-                           ax=ax, cut=0, sharey=ax1, order=n_species[::-1])
+                           ax=ax, cut=0, order=n_species[::-1])
 
             # Hide the right, left, and top spines
             ax.set_title(cat)

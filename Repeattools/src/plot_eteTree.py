@@ -1,3 +1,6 @@
+#Made by Francois Serra (@fransua in GitHub)
+#https://gist.github.com/fransua/da703c3d2ba121903c0de5e976838b71
+
 import builtins as __builtin__
 from itertools import chain
 from math import floor

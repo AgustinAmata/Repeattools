@@ -1,9 +1,25 @@
 from csv import DictReader
 
-#Merges inputs from both RepeatMasker and TESorter. Repeats
-#of RepeatMasker that are not in TESorter are filled with columns
-#of the latter
 def merge_inputs(rm_input, te_input):
+    """Merges inputs from both RepeatMasker and TESorter.
+    
+    Repeats of RepeatMasker that are not in TESorter
+    are filled with columns of the latter.
+
+    Parameters
+    ----------
+    rm_input : list of dictionaries
+        List of dictionaries from `read_repeatmasker_out`.
+    
+    te_input : list of dictionaries 
+        List of dictionaries from `read_tesorter_cls_tsv`.
+
+    Returns
+    -------
+    merged_inputs : list of dictionaries
+        List of dictionaries with merged data from RepeatMasker
+        and TESorter.
+    """
     merged_inputs = []
     te_index = {}
     
@@ -33,13 +49,25 @@ def merge_inputs(rm_input, te_input):
 
     return merged_inputs
 
-#Reads the .out file from RepeatMasker. Each repeat is added
-#as a dictionary, containing the data from each column as key-value pairs,
-#to a common list for the file. Additionally, it separates the class/family
-#column into two separate columns, and reallocates the columns of
-#the start and (left) of "position in repeat" of repeats whose match is in
-#the complementary strand 
 def read_repeatmasker_out(input_fhand):
+    """Reads the .out file from RepeatMasker.
+    
+    Each repeat is added as a dictionary, containing the data
+    from each column as key-value pairs, to a common list for
+    the file. Additionally, it separates the class/family
+    column into two separate columns, and reallocates the columns
+    of the start and (left) of "position in repeat" of repeats
+    whose match is in the complementary strand.
+
+    Parameters
+    ----------
+    input_fhand : file
+        .out file from RepeatMasker.
+
+    Returns
+    -------
+    rm_input : list of dictionaries
+    """
     fieldnames = [
         "sw", "per div", "per del", "per ins", "seqid", "start",
         "end", "q left", "match", "repeat", "class/family", "r start",
@@ -84,13 +112,25 @@ def read_repeatmasker_out(input_fhand):
 
     return read_repeats
 
-#Reads the .cls.tsv file from TESorter. Sequences that were analyzed
-#by TESorter must be previously analyzed by RepeatMasker
-#(and have to be prepared with RepeatModeler). As with the
-#previous function, this one also creates a list of dictionaries,
-#each dictionary corresponding to a repeat. It also reads data
-#contained in the #TE column, which comes from RepeatMasker
 def read_tesorter_cls_tsv(input_fhand):
+    """Reads the .cls.tsv file from TESorter.
+    
+    Sequences that were analyzed by TESorter must be 
+    previously analyzed by RepeatMasker (and have to be
+    prepared with RepeatModeler). It creates a list
+    of dictionaries, each dictionary corresponding to a repeat.
+    It also reads data contained in the #TE column, which
+    comes from RepeatMasker.
+
+    Parameters
+    ----------
+    input_fhand : file
+        .cls.tsv file from TESorter.
+
+    Returns
+    -------
+    te_input : list of dictionaries
+    """
     read_repeats = []
     for repeat in DictReader(input_fhand, delimiter= "\t"):
         repeat = {k.lower():v for (k, v) in repeat.items()}
@@ -111,6 +151,8 @@ def read_tesorter_cls_tsv(input_fhand):
         cls = class_family[0]
         family = class_family[1]
 
+        #Data in the domains column will consist
+        #of a list of dictionaries
         old_domains = repeat["domains"].split()
         new_domains = []
 
@@ -121,10 +163,12 @@ def read_tesorter_cls_tsv(input_fhand):
             new_domains.append({domain_clade[0]: domain_clade[1]})
         repeat["domains"] = new_domains
 
+        #Rename some columns
         repeat["tes order"] = repeat["order"]
         repeat["tes superfamily"] = repeat["superfamily"]
         repeat.pop("order")
 
+        #Create new columns for data in the #TE column
         key_names = ["seqid", "start", "end", "repeat", "class", "superfamily"]
         values = [seqid, start, end, rep, cls, family]
 

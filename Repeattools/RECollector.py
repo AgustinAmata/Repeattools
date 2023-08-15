@@ -1,8 +1,6 @@
 import argparse
-from csv import DictReader
 from pathlib import Path
 
-import pandas as pd
 
 from src.create_matrix import (create_df_from_parsed_input,
                                create_te_count_matrix,
@@ -90,7 +88,7 @@ def argument_parser():
                         action="store_true",required=False)
     help_filter_perc_threshold = """Select the percentage of divergence,
     deletions or insertions to use as a threshold. Percentage must be
-    preceded by div/del/ins="""
+    preceded by div/del/ins= (e.g. del=30.0)"""
     perc_group.add_argument("-t", help=help_filter_perc_threshold,
                             default="div=20.0", nargs=1, required=False)
     help_filter_perc_mode = """Filters data to only include

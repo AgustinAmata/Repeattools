@@ -2,8 +2,7 @@ import argparse
 from pathlib import Path
 
 
-from src.create_matrix import (create_df_from_parsed_input,
-                               create_te_count_matrix,
+from src.create_matrix import (create_te_count_matrix,
                                count_tes, filter_df_by_chromosomes,
                                filter_df_by_domain,
                                filter_df_by_length,
@@ -153,21 +152,14 @@ def main():
                     break
             print(f"Read {te_file.name} -> {sp_name}")
 
-    merged_inputs = {}
-    for inp in read_inputs:
-        rm_input = read_inputs[inp][0]
-        te_input = read_inputs[inp][1]
-        merged_inp = merge_inputs(rm_input, te_input)
-        merged_inputs[inp] = merged_inp
-        print(f"Merged inputs from {inp}")
-
-    print("Creating dataframes")
+    print("Merging inputs")
     species_dfs = {}
-    for species in merged_inputs:
-        sp_rep_list = merged_inputs[species]
-        sp_df = create_df_from_parsed_input(sp_rep_list)
-        species_dfs[species] = sp_df
-    print("Dataframes created")
+    for species in read_inputs:
+        rm_input = read_inputs[species][0]
+        te_input = read_inputs[species][1]
+        merged_inp = merge_inputs(rm_input, te_input)
+        species_dfs[species] = merged_inp
+        print(f"Merged inputs from {species}. Dataframe created")
 
     if arguments.length:
         print("Started filtering by length")

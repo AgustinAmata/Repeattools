@@ -1,19 +1,5 @@
 import pandas as pd
 
-def create_df_from_parsed_input(parsed_input):
-    """Creates a `pandas.DataFrame` from the merged input
-    """
-    repeats_df = pd.DataFrame(parsed_input)
-    convert_dict = {
-        "sw": "int32", "per div": "float32", "per del": "float32",
-        "per ins": "float32","start": "int64", "end": "int64",
-        "q left": "int64", "r start": "int32", "r end": "int32",
-        "r left": "int32", "id": "int32", "length": "int32"
-        }
-    repeats_df = repeats_df.astype(convert_dict)
-    return repeats_df
-
-
 def count_tes(input_df, species_name, col="superfamily"):
     """Counts each element of the selected column.
 

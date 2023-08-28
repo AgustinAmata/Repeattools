@@ -1,4 +1,4 @@
-from csv import DictReader
+import pandas as pd
 
 def merge_inputs(rm_input, te_input):
     """Merges inputs from both RepeatMasker and TESorter.
@@ -16,38 +16,38 @@ def merge_inputs(rm_input, te_input):
 
     Returns
     -------
-    merged_inputs : list of dictionaries
-        List of dictionaries with merged data from RepeatMasker
-        and TESorter.
+    merged_inputs : `pandas.DataFrame`
     """
-    merged_inputs = []
-    te_index = {}
-    
-    for te_repeat in te_input:
-        te_rep_start = te_repeat["start"]
-        te_rep_end = te_repeat["end"]
-        te_rep_repeat = te_repeat["repeat"]
-        te_index[(te_rep_start, te_rep_end, te_rep_repeat)] = te_repeat
+    #Create and concatenate dataframes
+    rm_df = pd.DataFrame(rm_input)
+    te_df = pd.DataFrame(te_input)
+    concat_df = pd.concat([rm_df, te_df])
 
-    for rm_repeat in rm_input:
-        rm_rep_start = rm_repeat["start"]
-        rm_rep_end = rm_repeat["end"]
-        rm_rep_name = rm_repeat["repeat"]
-        matching_rep = te_index.get((rm_rep_start, rm_rep_end, rm_rep_name))
+    #Fill empty values, domains contain a list
+    tr = concat_df["domains"].isna()
+    concat_df.loc[tr, "domains"] = concat_df.loc[tr, "domains"].apply(lambda x: [{"none":"none"}])
+    first_cols = list(rm_df[rm_df.columns[~rm_df.columns.isin(['start','end', 'repeat'])]])
+    last_cols = list(te_df[te_df.columns[~te_df.columns.isin(['start','end', 'repeat'])]])
+    none_cols = [col for col in last_cols if col != "domains"]
+    concat_df[none_cols] = concat_df[none_cols].fillna("none")
 
-        if not matching_rep:
-            rm_repeat["domains"] = [{"none": "none"}]
-            key_names = ["tes order", "tes superfamily", "complete", "strand", "clade"]
-            for key in key_names:
-                rm_repeat[key] = "none"
-            merged_rep = rm_repeat
+    #Merge rows of RM and TES belonging to the same repeat
+    cols = first_cols + last_cols
+    cols_order = {col:("first" if col in first_cols else "last") for col in cols} 
+    merged_df = concat_df.groupby(["start", "end", "repeat"], as_index=False).aggregate(cols_order).reindex(columns=concat_df.columns)
+    merged_df["id"] = merged_df["id"].astype("int32")
+    merged_df = merged_df.sort_values(by=["id"]).reset_index(drop=True)
 
-        else:
-            merged_rep = rm_repeat | matching_rep
+    #Convert values of numerical columns into floats/integers
+    convert_dict = {
+        "sw": "int32", "per div": "float32", "per del": "float32",
+        "per ins": "float32","start": "int64", "end": "int64",
+        "q left": "int64", "r start": "int32", "r end": "int32",
+        "r left": "int32", "id": "int32", "length": "int32"
+        }
+    merged_df = merged_df.astype(convert_dict)
 
-        merged_inputs.append(merged_rep)
-
-    return merged_inputs
+    return merged_df
 
 def read_repeatmasker_out(input_fhand):
     """Reads the .out file from RepeatMasker.
@@ -75,40 +75,36 @@ def read_repeatmasker_out(input_fhand):
         ]
     read_repeats = []
     
+    for _ in range(3):
+        next(input_fhand)
+
     for line in input_fhand:
         repeat_data = {}
         line = line.strip(" ").split()
 
-        if not line:
-            continue
+        for i in range(15):
+            if i == 10:
+                class_family = line[i].split("/")
+                if len(class_family) == 1:
+                    class_family.append("Unknown")
+                cls = class_family[0]
+                superfamily = class_family[1]
+                repeat_data["class"] = cls
+                repeat_data["superfamily"] = superfamily
+            else:
+                repeat_data[fieldnames[i]] = line[i]
 
-        elif line[0].startswith(("SW", "score")):
-            continue
+        if repeat_data["match"] == "C":
+            true_left = repeat_data["r start"]
+            true_start = repeat_data["r left"]
+            repeat_data["r start"] = true_start
+            repeat_data["r left"] = true_left
 
-        else:
-            for i in range(15):
-                if i == 10:
-                    class_family = line[i].split("/")
-                    if len(class_family) == 1:
-                        class_family.append("Unknown")
-                    cls = class_family[0]
-                    superfamily = class_family[1]
-                    repeat_data["class"] = cls
-                    repeat_data["superfamily"] = superfamily
-                else:
-                    repeat_data[fieldnames[i]] = line[i]
+        repeat_data["q left"] = repeat_data["q left"].strip("()")
+        repeat_data["r left"] = repeat_data["r left"].strip("()")
+        repeat_data["length"] = int(repeat_data["end"]) - int(repeat_data["start"])
 
-            if repeat_data["match"] == "C":
-                true_left = repeat_data["r start"]
-                true_start = repeat_data["r left"]
-                repeat_data["r start"] = true_start
-                repeat_data["r left"] = true_left
-
-            repeat_data["q left"] = repeat_data["q left"].strip("()")
-            repeat_data["r left"] = repeat_data["r left"].strip("()")
-            repeat_data["length"] = int(repeat_data["end"]) - int(repeat_data["start"])
-
-            read_repeats.append(repeat_data)
+        read_repeats.append(repeat_data)
 
     return read_repeats
 
@@ -131,53 +127,57 @@ def read_tesorter_cls_tsv(input_fhand):
     -------
     te_input : list of dictionaries
     """
+    fieldnames = [
+        "seqid", "start", "end", "repeat", "class",
+        "superfamily", "tes order", "tes superfamily",
+        "clade", "complete", "strand", "domains", "length"
+        ]
     read_repeats = []
-    for repeat in DictReader(input_fhand, delimiter= "\t"):
-        repeat = {k.lower():v for (k, v) in repeat.items()}
+    next(input_fhand)
 
-        seqid_and_info = repeat["#te"].split(":", 1)
+    for line in input_fhand:
+        line = line.strip("\n").split("\t")
+
+        #Classify data from the #TE column
+        seqid_and_info = line[0].split(":", 1)
         seqid = seqid_and_info[0]
         info = seqid_and_info[1].split("_", 1)
         pos = info[0].split("..")
         start = pos[0]
         end = pos[1]
+        length = int(end) - int(start)
         rep_info = info[1].split("#")
         rep = rep_info[0]
-        class_family = rep_info[1].split("/")
 
+        class_family = rep_info[1].split("/")
         if len(class_family) == 1:
             class_family.append("Unknown")
-
         cls = class_family[0]
         family = class_family[1]
 
+        #Get data from the other columns of TESorter
+        tes_order = line[1]
+        tes_superfamily = line[2]
+        clade = line[3]
+        complete = line[4]
+        strand = line[5]
+
         #Data in the domains column will consist
         #of a list of dictionaries
-        old_domains = repeat["domains"].split()
+        old_domains = line[6].split()
         new_domains = []
-
         for domain in old_domains:
             domain_clade = domain.split("|")
             if len(domain_clade) == 1:
                 domain_clade.append("none")
             new_domains.append({domain_clade[0]: domain_clade[1]})
-        repeat["domains"] = new_domains
 
-        #Rename some columns
-        repeat["tes order"] = repeat["order"]
-        repeat["tes superfamily"] = repeat["superfamily"]
-        repeat.pop("order")
+        #Create the dictionary for the repeat
+        rep_data = [seqid, start, end, rep, cls,
+                    family, tes_order, tes_superfamily,
+                    clade, complete, strand, new_domains, length]
+        repeat = dict(zip(fieldnames, rep_data))
 
-        #Create new columns for data in the #TE column
-        key_names = ["seqid", "start", "end", "repeat", "class", "superfamily"]
-        values = [seqid, start, end, rep, cls, family]
-
-        for i in range(6):
-            repeat[key_names[i]] = values[i]
-
-        repeat["length"] = int(repeat["end"]) - int(repeat["start"])
-
-        repeat.pop("#te")
         read_repeats.append(repeat)
 
     return read_repeats

@@ -1,5 +1,4 @@
 import unittest
-from csv import DictReader
 from pathlib import Path
 
 from src.read_input import read_tesorter_cls_tsv

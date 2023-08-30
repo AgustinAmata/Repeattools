@@ -32,7 +32,7 @@ def argument_parser():
     for each RM/TES file. File must contain the common part for
     both RM and TES files, followed by the name of the species 
     (use underscores instead of whitespaces) and separated
-    by a tab. Example:Peame105,Persea_americana"""
+    by a tab. Example:Peame105  Persea_americana"""
     parser.add_argument("--names", "-n", type=Path,
                         help=help_input_names_file, required=True)
 

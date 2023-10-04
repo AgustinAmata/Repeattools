@@ -1,3 +1,5 @@
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from .plot_eteTree import plot_tree
+from .utils import get_large_dfs
 
 def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
     """Generate heatmap from TE count matrix.
@@ -30,6 +33,7 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
         If True, the generated heatmap will contain a dendrogram
         for the species (rows).
     """
+    #Create colors for the groups and the legend
     group_df = matrix_df.index.map(group_dict)
     groups = group_df.unique()
     group_pal = sns.color_palette("YlOrBr", len(groups))
@@ -37,14 +41,16 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
     group_colors = group_df.map(group_lut)
 
     #Heatmap creation with previous standardization
-    cm_heat = sns.clustermap(matrix_df, standard_scale=1,
+    cm_heat = sns.clustermap(matrix_df, z_score=1,
                              cmap="mako", col_cluster=False,
                              row_colors=group_colors,
                              row_cluster=dendro)
     
+    #Add legend
     handles = [Patch(facecolor=group_lut[name]) for name in group_lut]
-    plt.legend(handles, group_lut, title='Species',
+    plt.legend(handles, group_lut, title='Groups',
                bbox_to_anchor=(0.5, 1),
+               ncol=math.ceil(len(handles)/4),
                bbox_transform=plt.gcf().transFigure,
                loc='upper center')
     
@@ -83,11 +89,12 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     pca_df["group"] = pca_df.index.map(group_dict)
 
     #Plotting the results
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6.4, 6.4))
     sns.scatterplot(data=pca_df, x=pca_df.PC1, y=pca_df.PC2,
                     hue="group", ax=ax)
-    ax.legend(loc= "center left", title="Groups",
-              bbox_to_anchor=(1.1,0.5))
+    ax.legend(loc="center left", title="Groups",
+              fontsize=8,
+              bbox_to_anchor=(1, 0.5))
     ax.set_xlabel(f"PC1 ({per_var[0]}%)")
     ax.set_ylabel(f"PC2 ({per_var[1]}%)")
 
@@ -117,7 +124,7 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     fig.tight_layout()
     fig.savefig(out_file, dpi=300)
 
-def get_divergence_violins(div_df, tree_fpath, out_file):
+def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
     """Generate violin plots given a long-form DataFrame.
 
     For a DataFrame containing divergence data from RECollector,
@@ -126,53 +133,67 @@ def get_divergence_violins(div_df, tree_fpath, out_file):
 
     Parameters
     ----------
-    div_df : pandas DataFrame
-        Long-form DataFrame consisting of at least three columns:
-        each row consists of a repeat, in which the first column
-        contains the name of the species, the second column contains
-        the subcategory of the selected category in RECollector
-        (whose name is the overall name of the column) and the third
-        column contains its divergence value (given as a float);
-        further columns will be ignored.
+    files_list : list of paths
+        List composed of the paths to the divergence files from RECollector.
 
     tree_fpath : path to a Newick tree file
         If provided, violin plots will be ordered according to the data
         given by the tree (which will also appear in the final figure).
 
+    analyzed_species: list
+        List containing the names of the species to analyze
+    
     out_file : output file
     """
+
     #No tree file provided
     if not tree_fpath:
-        #Get categories
-        cat_name = div_df.columns[1]
-        cats = div_df[cat_name].unique()
-
         #Creating main figure and subplots
         width, height = plt.rcParams.get("figure.figsize")
-        fig, axs = plt.subplots(1, len(cats),
-                                figsize=(len(cats)*2, height*2),
+        fig, axs = plt.subplots(1, len(files_list),
+                                figsize=(len(files_list)*2, height*4),
                                 sharey=True, sharex=True,
                                 constrained_layout=True)
         #Create alphabetically ordered list
-        n_species = sorted(div_df.species.unique())
-
+        n_species = sorted(analyzed_species)
+        ax_count = 0
         first_axes = True
-        for cat, ax in zip(cats, axs):
-            #Check if some species is not in the category
-            cat_df = div_df[div_df[cat_name] == cat]
-            sp_in_df = list(cat_df["species"].unique())
+        #Create violin plots for each subcategory
+        for i, file in enumerate(files_list):
+            #Create DataFrame and check if some species is not it
+            if i > 0:
+                for n_ax in axs[:i]:        
+                    if not n_ax.has_data():    
+                        ax = n_ax
+                        break
+                else:
+                    ax = axs[i]
+            else:
+                ax = axs[i]
+
+            with open(file) as div_file:
+                div_df = get_large_dfs(div_file)
+                cat_name = div_df.columns[1]
+                cat = list(div_df[cat_name].unique())[0]
+                print(f"Read data for {cat} divergence")
+            sp_in_df = list(div_df["species"].unique())
+            if (len(sp_in_df)/len(n_species)) < 0.75:
+                print("Not enough species to proceed with the plot")
+                continue
+            ax_count += 1
             for species in n_species:
                 #Add blank data if not present
                 if species not in sp_in_df:
                     empty_df = pd.DataFrame({"species": [species],
                                              cat_name: cat, "per div": 0.0})
-                    cat_df = pd.concat([cat_df, empty_df])
+                    div_df = pd.concat([div_df, empty_df])
 
             #Generate violin plot for the category,
             #limit the extent of the violin within the range
             #of the observed data
-            sns.violinplot(data=cat_df, x="per div", y="species",
+            sns.violinplot(data=div_df, x="per div", y="species",
                            ax=ax, cut=0, order=n_species)
+            print(f"Generated violin plots for {cat} divergence")
 
             # Hide the right, left, and top spines
             ax.set_title(cat)
@@ -187,8 +208,10 @@ def get_divergence_violins(div_df, tree_fpath, out_file):
                 first_axes = False
             else:
                 ax.yaxis.set_ticks_position("none")
-
-        fig.savefig(out_file, dpi=300)
+        for ax in axs[ax_count:]:
+            fig.delaxes(ax)
+        # fig.set_size_inches(len(ax_count)*2, height*4)
+        fig.savefig(out_file, bbox_inches="tight", dpi=300)
 
     #Tree file provided
     else:
@@ -201,15 +224,11 @@ def get_divergence_violins(div_df, tree_fpath, out_file):
         for n in tree.traverse():
             n.set_style(nstyle)
 
-        #Get categories
-        cat_name = div_df.columns[1]
-        cats = div_df[cat_name].unique()
-
         #Creating main figure and GridSpec
         width, height = plt.rcParams.get("figure.figsize")
-        fig = plt.figure(figsize=(len(cats)*2+1, height*2),
+        fig = plt.figure(figsize=(len(files_list)*2+1, height*2),
                          constrained_layout=True)
-        gs = GridSpec(1, len(cats)+2, figure=fig)
+        gs = GridSpec(1, len(files_list)+2, figure=fig)
 
         #Tree takes two subplot spaces
         ax1 = fig.add_subplot(gs[0:2])
@@ -225,7 +244,7 @@ def get_divergence_violins(div_df, tree_fpath, out_file):
         #Create first Axes for violins so that they can share
         #a common x axis; all Axes are aligned with the tree
         ax2 = fig.add_subplot(gs[2], sharey=ax1)
-        for cat, i in zip(cats, range(2, len(cats)+2)):
+        for file, i in zip(files_list, range(2, len(files_list)+2)):
             #First Axes for the violins
             if i == 2:
                 ax = ax2
@@ -233,21 +252,26 @@ def get_divergence_violins(div_df, tree_fpath, out_file):
             else:
                 ax = fig.add_subplot(gs[i], sharey=ax1, sharex=ax2)
             
-            #Check if some species is not in the category
-            cat_df = div_df[div_df[cat_name] == cat]
-            sp_in_df = list(cat_df["species"].unique())
+            #Create DataFrame and check if some species is not it
+            with open(file) as div_file:
+                div_df = get_large_dfs(div_file)
+                cat_name = div_df.columns[1]
+                cat = list(div_df[cat_name].unique())[0]
+                print(f"Read data for {cat} divergence")
+            sp_in_df = list(div_df["species"].unique())
             for species in n_species:
                 #Add blank data if not present
                 if species not in sp_in_df:
                     empty_df = pd.DataFrame({"species": [species],
                                              cat_name: cat, "per div": 0.0})
-                    cat_df = pd.concat([cat_df, empty_df])
+                    div_df = pd.concat([div_df, empty_df])
 
             #Generate violin plot for the category,
             #limit the extent of the violin within the range
             #of the observed data
-            sns.violinplot(data=cat_df, x="per div", y="species",
+            sns.violinplot(data=div_df, x="per div", y="species",
                            ax=ax, cut=0, order=n_species[::-1])
+            print(f"Generated violin plots for {cat} divergence")
 
             # Hide the right, left, and top spines
             ax.set_title(cat)

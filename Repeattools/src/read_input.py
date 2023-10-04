@@ -1,6 +1,6 @@
 import pandas as pd
 
-def merge_inputs(rm_input, te_input):
+def merge_inputs(target_df, te_df):
     """Merges inputs from both RepeatMasker and TESorter.
     
     Repeats of RepeatMasker that are not in TESorter
@@ -8,56 +8,44 @@ def merge_inputs(rm_input, te_input):
 
     Parameters
     ----------
-    rm_input : list of dictionaries
-        List of dictionaries from `read_repeatmasker_out`.
+    target_df : `pandas.DataFrame`
+        `pandas.DataFrame` from `read_repeatmasker_out`.
     
-    te_input : list of dictionaries 
-        List of dictionaries from `read_tesorter_cls_tsv`.
+    te_df : `pandas.DataFrame`
+        `pandas.DataFrame` from `read_tesorter_cls_tsv`.
 
     Returns
     -------
     merged_inputs : `pandas.DataFrame`
     """
-    #Create and concatenate dataframes
-    rm_df = pd.DataFrame(rm_input)
-    te_df = pd.DataFrame(te_input)
-    concat_df = pd.concat([rm_df, te_df])
+    #Select columns to merge and datatypes for the merged df
+    merge_cols = ["seqid", "start", "end", "class", "superfamily", "length", "repeat"]
+    cats_dict = {"class": "category", "superfamily": "category",
+                 "repeat": "category", "tes order":"category",
+                 "tes superfamily": "category", "clade": "category"}
+    target_df = target_df.merge(te_df, how="left", on=merge_cols).astype(cats_dict)
 
-    #Fill empty values, domains contain a list
-    tr = concat_df["domains"].isna()
-    concat_df.loc[tr, "domains"] = concat_df.loc[tr, "domains"].apply(lambda x: [{"none":"none"}])
-    first_cols = list(rm_df[rm_df.columns[~rm_df.columns.isin(['start','end', 'repeat'])]])
-    last_cols = list(te_df[te_df.columns[~te_df.columns.isin(['start','end', 'repeat'])]])
-    none_cols = [col for col in last_cols if col != "domains"]
-    concat_df[none_cols] = concat_df[none_cols].fillna("none")
+    #Add "Unknown" to repeats of RepeatMasker that do not have
+    #a match in TESorter
+    none_cols = ["tes order", "tes superfamily", "clade"]
+    for col in none_cols:
+        if "Unknown" not in list(target_df[col].cat.categories):
+            target_df[col] = target_df[col].cat.add_categories("Unknown").fillna("Unknown")
+        else:    
+            target_df[col] = target_df[col].fillna("Unknown")
 
-    #Merge rows of RM and TES belonging to the same repeat
-    cols = first_cols + last_cols
-    cols_order = {col:("first" if col in first_cols else "last") for col in cols} 
-    merged_df = concat_df.groupby(["start", "end", "repeat"], as_index=False).aggregate(cols_order).reindex(columns=concat_df.columns)
-    merged_df["id"] = merged_df["id"].astype("int32")
-    merged_df = merged_df.sort_values(by=["id"]).reset_index(drop=True)
+    #Same as before, but with the "domains" column
+    tr = target_df["domains"].isna()
+    target_df.loc[tr, "domains"] = target_df.loc[tr, "domains"].apply(lambda x: [{"none":"none"}])
 
-    #Convert values of numerical columns into floats/integers
-    convert_dict = {
-        "sw": "int32", "per div": "float32", "per del": "float32",
-        "per ins": "float32","start": "int64", "end": "int64",
-        "q left": "int64", "r start": "int32", "r end": "int32",
-        "r left": "int32", "id": "int32", "length": "int32"
-        }
-    merged_df = merged_df.astype(convert_dict)
-
-    return merged_df
+    return target_df
 
 def read_repeatmasker_out(input_fhand):
     """Reads the .out file from RepeatMasker.
     
-    Each repeat is added as a dictionary, containing the data
-    from each column as key-value pairs, to a common list for
-    the file. Additionally, it separates the class/family
-    column into two separate columns, and reallocates the columns
-    of the start and (left) of "position in repeat" of repeats
-    whose match is in the complementary strand.
+    It creates a `pandas.DataFrame`. Additionally,
+    it separates the class/family column into two
+    separate columns.
 
     Parameters
     ----------
@@ -66,55 +54,53 @@ def read_repeatmasker_out(input_fhand):
 
     Returns
     -------
-    rm_input : list of dictionaries
+    rm_input : `pandas.DataFrame`
     """
+    #Function to prepare for separation of the class/family column
+    def create_cf_list(line):
+        class_family = line.split("/")
+        if len(class_family) == 1:
+            if class_family[0] == "Unknown":
+                class_family.append("Unknown")
+            else:
+                class_family.append(class_family[0])
+        return class_family
+
+    #Initial columns of the the file, columns that will be
+    #used and their datatypes
     fieldnames = [
         "sw", "per div", "per del", "per ins", "seqid", "start",
         "end", "q left", "match", "repeat", "class/family", "r start",
         "r end", "r left", "id"
         ]
-    read_repeats = []
-    
-    for _ in range(3):
-        next(input_fhand)
+    usable_cols = [
+        "per div", "per del", "per ins", "seqid", "start",
+        "end", "repeat", "class/family"
+        ]
+    convert_dict = {
+        "per div": "float16", "per del": "float16",
+        "per ins": "float16","start": "int32", "end": "int32",
+        "repeat": "category"
+        }
 
-    for line in input_fhand:
-        repeat_data = {}
-        line = line.strip(" ").split()
+    #Create the DataFrame, separate the class/family column and
+    #add a repeat length column
+    rm_input = pd.read_csv(input_fhand, skiprows=2, header=None,
+                           names=fieldnames, sep="\s+", comment="*",
+                           usecols=usable_cols, dtype=convert_dict)
+    rm_input["length"] = rm_input["end"] - rm_input["start"]
+    rm_input["class/family"] = rm_input["class/family"].apply(create_cf_list)
+    rm_input[["class", "superfamily"]] = pd.DataFrame(rm_input.pop("class/family").tolist(),
+                                                      index=rm_input.index, dtype="category")
 
-        for i in range(15):
-            if i == 10:
-                class_family = line[i].split("/")
-                if len(class_family) == 1:
-                    class_family.append("Unknown")
-                cls = class_family[0]
-                superfamily = class_family[1]
-                repeat_data["class"] = cls
-                repeat_data["superfamily"] = superfamily
-            else:
-                repeat_data[fieldnames[i]] = line[i]
-
-        if repeat_data["match"] == "C":
-            true_left = repeat_data["r start"]
-            true_start = repeat_data["r left"]
-            repeat_data["r start"] = true_start
-            repeat_data["r left"] = true_left
-
-        repeat_data["q left"] = repeat_data["q left"].strip("()")
-        repeat_data["r left"] = repeat_data["r left"].strip("()")
-        repeat_data["length"] = int(repeat_data["end"]) - int(repeat_data["start"])
-
-        read_repeats.append(repeat_data)
-
-    return read_repeats
+    return rm_input
 
 def read_tesorter_cls_tsv(input_fhand):
     """Reads the .cls.tsv file from TESorter.
     
     Sequences that were analyzed by TESorter must be 
     previously analyzed by RepeatMasker (and have to be
-    prepared with RepeatModeler). It creates a list
-    of dictionaries, each dictionary corresponding to a repeat.
+    prepared with RepeatModeler). It creates a `pandas.DataFrame`.
     It also reads data contained in the #TE column, which
     comes from RepeatMasker.
 
@@ -125,59 +111,61 @@ def read_tesorter_cls_tsv(input_fhand):
 
     Returns
     -------
-    te_input : list of dictionaries
+    te_input : `pandas.DataFrame`
     """
-    fieldnames = [
-        "seqid", "start", "end", "repeat", "class",
-        "superfamily", "tes order", "tes superfamily",
-        "clade", "complete", "strand", "domains", "length"
-        ]
-    read_repeats = []
-    next(input_fhand)
-
-    for line in input_fhand:
-        line = line.strip("\n").split("\t")
-
-        #Classify data from the #TE column
-        seqid_and_info = line[0].split(":", 1)
-        seqid = seqid_and_info[0]
-        info = seqid_and_info[1].split("_", 1)
-        pos = info[0].split("..")
-        start = pos[0]
-        end = pos[1]
-        length = int(end) - int(start)
-        rep_info = info[1].split("#")
-        rep = rep_info[0]
-
-        class_family = rep_info[1].split("/")
-        if len(class_family) == 1:
-            class_family.append("Unknown")
-        cls = class_family[0]
-        family = class_family[1]
-
-        #Get data from the other columns of TESorter
-        tes_order = line[1]
-        tes_superfamily = line[2]
-        clade = line[3]
-        complete = line[4]
-        strand = line[5]
-
-        #Data in the domains column will consist
-        #of a list of dictionaries
-        old_domains = line[6].split()
-        new_domains = []
-        for domain in old_domains:
-            domain_clade = domain.split("|")
+    #Function to create list of dictionaries for each repeat domains
+    def doms_dict(dom):
+        old_dom = dom.split()
+        new_doms = []
+        for dom in old_dom:
+            domain_clade = dom.split("|")
             if len(domain_clade) == 1:
                 domain_clade.append("none")
-            new_domains.append({domain_clade[0]: domain_clade[1]})
+            new_doms.append({domain_clade[0]:domain_clade[1]})
+        return new_doms
 
-        #Create the dictionary for the repeat
-        rep_data = [seqid, start, end, rep, cls,
-                    family, tes_order, tes_superfamily,
-                    clade, complete, strand, new_domains, length]
-        repeat = dict(zip(fieldnames, rep_data))
+    #Function to prepare for separation of the class/family column
+    def create_cf_list(line):
+        class_family = line.split("/")
+        if len(class_family) == 1:
+            class_family.append("Unknown")
+        return class_family
+    
+    #Initial columns of the the file, columns that will be
+    #used and their datatypes    
+    fieldnames = [
+        "#TE", "tes order", "tes superfamily", "clade",
+        "complete", "strand", "domains"
+        ]
+    usable_cols = [
+        "#TE", "tes order", "tes superfamily", "clade",
+        "domains"
+        ]
+    convert_dict = {"tes order": "category",
+                    "tes superfamily": "category",
+                    "clade": "category"}
+    
+    #Create the DataFrame
+    te_input = pd.read_csv(input_fhand, delimiter="\t", header=0,
+                           names=fieldnames, usecols=usable_cols,
+                           dtype=convert_dict)
 
-        read_repeats.append(repeat)
+    #Separate data of #TE column
+    new_cols = ["seqid", "start", "end", "repeat", "class/superfamily"]
+    te_input[new_cols] = te_input.pop("#TE").str.extract("(.*):(\d*)..(\d*)_{1}(.*)#(.*)", expand=True)
+    te_input["repeat"] = te_input["repeat"].astype("category")
+    te_input[["start","end"]] = te_input[["start","end"]].astype("int32")
 
-    return read_repeats
+    #Capitalize "unknown" data of "tes order", "tes superfamily" and "clade"
+    for col in ["tes order", "tes superfamily", "clade"]:
+        te_input[col] = te_input[col].cat.rename_categories({"unknown": "Unknown"})
+
+    #Separate the class/family column,
+    #add a repeat length column and modify the domains column
+    te_input["domains"] = te_input["domains"].apply(doms_dict)
+    te_input["class/superfamily"] = te_input["class/superfamily"].apply(create_cf_list)
+    te_input[["class", "superfamily"]] = pd.DataFrame(te_input.pop("class/superfamily").tolist(),
+                                                      index=te_input.index, dtype="category")
+    te_input["length"] = te_input["end"] - te_input["start"]
+
+    return te_input

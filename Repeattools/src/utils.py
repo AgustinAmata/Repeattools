@@ -1,14 +1,15 @@
 from csv import DictReader
 import pandas as pd
 
-def convert_data_to_long_df_div(species_dfs, depth):
+def convert_data_to_long_df_div(species_df, species, depth):
     """Convert divergence data of RECollector to a long-form DataFrame.
     
     Parameters
     ----------
-    species_dfs : dict
-        Dictionary containing the dataframes for each species.
-        Key: species; value: dataframe.
+    species_df : `pandas.DataFrame`
+
+    species : str
+        Name of the species of the dataframe
 
     depth : str
         Column of the dataframe that will be selected.
@@ -16,20 +17,21 @@ def convert_data_to_long_df_div(species_dfs, depth):
     Returns
     -------
     long_df_div : `pandas.DataFrame`
-        Dataframe containing the divergence data for every species
-        analyzed by RECollector. Composed of three columns: species,
+        Dataframe containing the divergence data for a given
+        species. Composed of three columns: species,
         category (selected by depth), and the percentage of
         divergence for the repeat.
     """
-    long_df_div = pd.DataFrame()
-    for species in species_dfs:
-        sp_df = species_dfs[species]
-        #Create new column for species
-        sp_df.insert(0, "species", species)
-        selected_columns = ["species", depth, "per div"]
-        long_df = sp_df.loc[:, selected_columns]
-        long_df_div = pd.concat([long_df_div, long_df], axis= 0)
-    long_df_div = long_df_div.reset_index(drop=True)
+    sp_df = species_df
+    #Create new column for species
+    sp_df.insert(0, "species", species)
+    selected_columns = ["species", depth, "per div"]
+    
+    #Select columns and their datatypes
+    convert_dict = {"species": "category", depth: "category",
+                    "per div": "float16"}
+    long_df_div = sp_df.loc[:, selected_columns].astype(convert_dict)
+        
     return long_df_div
 
 def get_large_dfs(file, exclude=False, transpose=False):
@@ -54,30 +56,39 @@ def get_large_dfs(file, exclude=False, transpose=False):
     df_concat : `pandas.DataFrame`
         DataFrame with the applied changes.
     """
-    df_chunk = pd.read_csv(file, header=0, index_col=0, chunksize=1000000)
-    chunk_list = []
-    for chunk in df_chunk:
-        #For RECollector TE count matrix
-        if exclude and transpose:
-                chunk = chunk.T
-                excluded = ["Unknown", "none", "{'none':'none'}"]
-                chunk = chunk.drop(columns=excluded, errors="ignore")
-
-        #For RECollector divergence data
-        elif exclude and not transpose:
+    #For RECollector divergence data
+    if not exclude and not transpose:
+        chunk_list = []
+        df_chunk = pd.read_csv(file, header=0, chunksize=1000000)
+        for chunk in df_chunk:
+            species = chunk.columns[0]
             cat_name = chunk.columns[1]
-            excluded = ["Unknown", "none", "{'none':'none'}"]
-            chunk = chunk[chunk[cat_name].apply(lambda x: x not in excluded)]
+            per_div = chunk.columns[2]
+            chunk = chunk.astype({species: "category",
+                                    cat_name: "category",
+                                    per_div: "float16"})
+            
+            chunk_list.append(chunk)
+            
+        df_concat = pd.concat(chunk_list).astype({species: "category",
+                                    cat_name: "category",
+                                    per_div: "float16"})
 
-        #For RECollector TE count matrix
+        return df_concat
+
+    #For RECollector TE count matrix
+    else:
+        te_count_df = pd.read_csv(file, header=0, index_col=0)
+
+        if exclude and transpose:
+                te_count_df = te_count_df.T
+                excluded = ["Unknown", "none", "{'none':'none'}"]
+                te_count_df = te_count_df.drop(columns=excluded, errors="ignore")
+            
         elif not exclude and transpose:
-            chunk = chunk.T
+            te_count_df = te_count_df.T
 
-        chunk_list.append(chunk)
-
-    df_concat = pd.concat(chunk_list)
-
-    return df_concat
+        return te_count_df
 
 def read_chroms_file(chr_file):
     """Reads the file for chromosome filtering.

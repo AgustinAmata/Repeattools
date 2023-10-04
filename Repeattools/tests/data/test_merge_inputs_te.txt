@@ -1,1 +1,0 @@
-[{"seqid": "Peame105C00", "start": "10027969", "end": "10028180","repeat": "rnd-5_family-987", "class": "LINE","superfamily": "L1", "tes order": "LINE","tes superfamily": "unknown", "clade": "LINE","complete": "unknown", "strand": "+", "domains": [{"RT": "LINE"}], "length": 211}]

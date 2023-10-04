@@ -53,7 +53,7 @@ def get_options():
 
 def main():
     arguments = get_options()
-    matrix_fpath = arguments.matrix
+    matrix_fpath = arguments.input
     exclude = arguments.exclude
     dendro = arguments.dendro
     show_names = arguments.names

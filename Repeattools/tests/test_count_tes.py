@@ -18,7 +18,7 @@ class CountTransposableElement(unittest.TestCase):
             input_fhand = pd.read_csv(input_fhand)
             counted_tes = count_tes(input_fhand, "Persea_americana")
 
-        test_series = pd.Series({"L1": 3}, name="Persea_americana")
+        test_series = pd.Series({"L1": 3}, name="Persea_americana", dtype="int32")
         test_series.index.name = "superfamily"
 
         assert_series_equal(counted_tes, test_series) 

@@ -82,7 +82,7 @@ def get_large_dfs(file, exclude=False, transpose=False):
 
         if exclude and transpose:
                 te_count_df = te_count_df.T
-                excluded = ["Unknown", "none", "{'none':'none'}"]
+                excluded = ["Unknown", "Low_complexity", "Satellite", "Simple_repeat", "{'none':'none'}"]
                 te_count_df = te_count_df.drop(columns=excluded, errors="ignore")
             
         elif not exclude and transpose:

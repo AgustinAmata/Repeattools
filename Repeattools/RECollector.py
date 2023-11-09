@@ -183,7 +183,7 @@ def main():
             continue
 
         if len(te_file) != 1:
-            print("RepeatMasker file was not found/file name in names file was not clear enough")
+            print("TESorter file was not found/file name in names file was not clear enough")
             print("Proceding with next species")
             continue
 

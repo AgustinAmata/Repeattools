@@ -57,7 +57,14 @@ def main():
     
     files_list = list(div_dir.glob("*"))
     if exclude:
-        files_list = list(filter(lambda x: "Unknown" not in x.name, files_list))
+        new_list = []
+        for file in files_list:
+            for col in ["Unknown", "Low_complexity", "Satellite", "Simple_repeat", "LTR", "DNA", "rRNA"]:
+                if col in file.name:
+                    break
+            else:
+                new_list.append(file)
+        files_list = new_list
 
     print(f"{'-'*10} Generating violin plots for divergence {'-'*10}")
     get_divergence_violins(files_list, tree_fpath, analyzed_species, out_fpath)

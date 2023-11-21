@@ -79,8 +79,8 @@ def read_repeatmasker_out(input_fhand):
         ]
     convert_dict = {
         "per div": "float16", "per del": "float16",
-        "per ins": "float16","start": "int32", "end": "int32",
-        "repeat": "category"
+        "per ins": "float16", "seqid": "str", "start": "int32",
+        "end": "int32", "repeat": "category"
         }
 
     #Create the DataFrame, separate the class/family column and

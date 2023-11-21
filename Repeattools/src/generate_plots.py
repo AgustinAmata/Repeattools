@@ -23,7 +23,7 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
         DataFrame in wide form, where columns are the different
         subcategories of the chosen category, and rows are species.
     
-    out_file : output file
+    out_file : output file path
 
     group_dict : dictionary
         Contains the groups defined by the user. Keys: species;
@@ -44,17 +44,18 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
     cm_heat = sns.clustermap(matrix_df, z_score=1,
                              cmap="mako", col_cluster=False,
                              row_colors=group_colors,
-                             row_cluster=dendro)
+                             row_cluster=dendro, figsize=(15,15))
     
     #Add legend
     handles = [Patch(facecolor=group_lut[name]) for name in group_lut]
     plt.legend(handles, group_lut, title='Groups',
-               bbox_to_anchor=(0.5, 1),
+               bbox_to_anchor=(0.5, 0.96),
                ncol=math.ceil(len(handles)/4),
                bbox_transform=plt.gcf().transFigure,
-               loc='upper center')
-    
-    cm_heat.savefig(out_file, dpi=300)
+               loc='upper center', title_fontsize=18,
+               fontsize=18)
+    cm_heat.ax_heatmap.set_xlabel("")
+    cm_heat.savefig(out_file, dpi=200)
 
 def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     """Generate PCA plot from TE count matrix.
@@ -65,7 +66,7 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
         DataFrame in wide form, where columns are the different
         subcategories of the chosen category, and rows are species.
 
-    out_file : output file
+    out_file : output file path
 
     group_dict : dictionary
         Contains the groups defined by the user. Keys: species;
@@ -124,6 +125,68 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     fig.tight_layout()
     fig.savefig(out_file, dpi=300)
 
+def get_divergence_boxplots(div_file, species_and_groups, out_fpath):
+    """Generate a box plot from a given category from RECollector divergence data.
+
+    Parameters
+    ----------
+    div_file : path to the RECollector divergence file
+
+    species_and_groups : dictionary
+        Contains the groups defined by the user. Keys: species;
+        values: group.
+
+    out_fpath : output file path
+    """
+    sp_per_group = {}
+    for k, v in species_and_groups.items():
+        if v in sp_per_group:
+            sp_per_group[v].append(k)
+        else:
+            sp_per_group[v] = [k]
+    ordered_sp = [sp for val in sp_per_group.values() for sp in val]
+
+    with open(div_file) as file:
+        div_df = get_large_dfs(file)
+        cat_name = div_df.columns[1]
+        cat = list(div_df[cat_name].unique())[0]
+        div_df["group"] = div_df["species"].apply(lambda x: species_and_groups[x]).astype("category")
+        print(f"Read data for {cat} divergence")
+    
+    #Check if some species is not in the dataframe
+    sp_in_df = list(div_df["species"].unique())    
+    for species in ordered_sp:
+        #Add blank data if not present
+        if species not in sp_in_df:
+            empty_df = pd.DataFrame({"species": [species],
+                                        cat_name: cat, "per div": 0.0})
+            div_df = pd.concat([div_df, empty_df])
+
+    #Modify plot aspect given the number of species
+    data_length = len(ordered_sp)
+    if data_length <= 25:
+        plot_aspect = 3
+    elif data_length > 25 and data_length <= 50:
+        plot_aspect = 3.5
+    elif data_length > 50 and data_length <= 75:
+        plot_aspect = 4
+    else:
+        plot_aspect = 5
+
+    b_plot = sns.catplot(data=div_df, x="species",
+                         y="per div", hue="group",
+                         kind="box", aspect=plot_aspect, order=ordered_sp,
+                         hue_order=list(sp_per_group.keys()),
+                         dodge=False, sharex=True)
+    b_plot.set_xticklabels(rotation=90)
+    sns.despine(bottom=True)
+    b_plot.set(title=f"Divergence data for {cat}", 
+               ylabel="% Divergence", xlabel="",
+               axisbelow=True)
+    b_plot.legend.set(title="Groups")
+    b_plot.ax.yaxis.grid()
+    b_plot.savefig(out_fpath, dpi=200)
+
 def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
     """Generate violin plots given a long-form DataFrame.
 
@@ -143,7 +206,7 @@ def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
     analyzed_species: list
         List containing the names of the species to analyze
     
-    out_file : output file
+    out_file : output file path
     """
 
     #No tree file provided
@@ -211,7 +274,7 @@ def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
         for ax in axs[ax_count:]:
             fig.delaxes(ax)
         # fig.set_size_inches(len(ax_count)*2, height*4)
-        fig.savefig(out_file, bbox_inches="tight", dpi=300)
+        fig.savefig(out_file, bbox_inches="tight", dpi=200)
 
     #Tree file provided
     else:
@@ -287,4 +350,4 @@ def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
         _ = ax1.set_xlim(xmin, xmax)
         _ = ax1.set_ylim(ymin, ymax)
 
-        fig.savefig(out_file, dpi=300)
+        fig.savefig(out_file, dpi=200)

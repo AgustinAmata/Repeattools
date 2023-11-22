@@ -1,4 +1,7 @@
 import argparse
+import sys
+import traceback
+from uuid import uuid1
 from pathlib import Path
 
 from src.generate_plots import (get_count_matrix_heatmap,
@@ -38,12 +41,9 @@ def argument_parser():
     parser.add_argument("--gfile", "-g", type=Path,
                         help=help_group_file, required=True)
 
-    help_output_heatmap = """Output file name for the heatmap"""
-    parser.add_argument("--heatmap", "-H", type=Path,
-                        help=help_output_heatmap, required=True)
-    help_output_pca = """Output file name for the PCA"""
-    parser.add_argument("--pca", "-p", type=Path,
-                        help=help_output_pca, required=True)
+    help_output_folder = """Output folder for the heatmap and the PCA"""
+    parser.add_argument("--output", "-o", type=Path,
+                        help=help_output_folder, required=True)
 
     return parser
 
@@ -58,22 +58,58 @@ def main():
     dendro = arguments.dendro
     show_names = arguments.names
     group_fpath = arguments.gfile
-    out_heatmap = arguments.heatmap
-    out_pca = arguments.pca
+    out_folder = arguments.output
 
-    with open(group_fpath) as gfile:
-        group_dict = read_names_file(gfile)
-        print("Read groups file")
+    if not out_folder.exists():
+        out_folder.mkdir()
 
-    with open(matrix_fpath) as matrix:
-        matrix_df = get_large_dfs(matrix, exclude, transpose=True)
-        print("Read TE count matrix file")
-        get_count_matrix_heatmap(matrix_df, out_heatmap,
-                                 group_dict, dendro=dendro)
-        print("Generated heatmap")
-        get_count_matrix_pca(matrix_df, out_pca,
-                             group_dict, show_names=show_names)
-        print("Generated PCA")
+    log_number = uuid1()
+    log_fhand = open(out_folder / f"REPlotCounts.{log_number}.log", "w")
+    msg = f"Command used: {' '.join(sys.argv)}\n"
+    msg += f"Input matrix: {matrix_fpath.resolve()}\n"
+    msg += f"Output folder: {out_folder.resolve()}\n"
+    print(msg)
+    log_fhand.write(msg)
+    log_fhand.flush()
+
+    out_heatmap = out_folder / f"Heatmap_{log_number}.png"
+    out_pca = out_folder / f"PCA_{log_number}.png"
+
+    try:
+        with open(group_fpath) as gfile:
+            group_dict = read_names_file(gfile)
+            print("Read groups file")
+            msg = f"Groups file location: {group_fpath.resolve()}\n"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.flush()
+
+        with open(matrix_fpath) as matrix:
+            matrix_df = get_large_dfs(matrix, exclude, transpose=True)
+            print("Read TE count matrix file")
+            get_count_matrix_heatmap(matrix_df, out_heatmap,
+                                    group_dict, dendro=dendro)
+            print("Generated heatmap")
+            msg = f"Heatmap created at: {out_heatmap.resolve()}\n"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.flush()
+            get_count_matrix_pca(matrix_df, out_pca,
+                                group_dict, show_names=show_names)
+            print("Generated PCA")
+            msg = f"PCA created at: {out_pca.resolve()}\n"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.flush()
+            log_fhand.close()
+
+    except Exception as e:
+        msg = f"{'*'*10} An error occurred. See traceback below {'*'*10}\n"
+        print(msg)
+        log_fhand.write(msg)
+        log_fhand.write(traceback.format_exc())
+        log_fhand.close()
+        raise
 
 if __name__ == "__main__":
     main()

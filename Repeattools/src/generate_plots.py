@@ -164,7 +164,9 @@ def get_divergence_boxplots(div_file, species_and_groups, out_fpath):
 
     #Modify plot aspect given the number of species
     data_length = len(ordered_sp)
-    if data_length <= 25:
+    if data_length <= 10:
+        plot_aspect = 2
+    elif data_length > 10 and data_length <= 25:
         plot_aspect = 3
     elif data_length > 25 and data_length <= 50:
         plot_aspect = 3.5

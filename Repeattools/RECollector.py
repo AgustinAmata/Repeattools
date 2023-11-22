@@ -136,6 +136,9 @@ def main():
 
     out_folder = arguments.output
 
+    if not out_folder.exists():
+        out_folder.mkdir()
+
     log_number = uuid1()
     log_fhand = open(out_folder / f"RECollector.{log_number}.log", "w")
     msg = f"Command used: {' '.join(sys.argv)}\n"
@@ -145,12 +148,6 @@ def main():
     log_fhand.write(msg)
     log_fhand.flush()
 
-    if not out_folder.exists():
-        out_folder.mkdir()
-        msg = f"{out_folder.resolve()} was not found. {out_folder.resolve()} was created\n"
-        print(msg)
-        log_fhand.write(msg)
-        log_fhand.flush()
     div_folder = out_folder.joinpath(f"{depth}_divergence_files")
     if not div_folder.exists():
         div_folder.mkdir()
@@ -223,6 +220,7 @@ def main():
             ignored_dirs.append(dir_object.name)
             continue
 
+        species = dir_object.name
         rm_file = list(dir_object.glob(f"*.out"))
         te_file = list(dir_object.glob(f"*.cls.tsv"))
 
@@ -257,9 +255,9 @@ def main():
     species_counted_tes = []
     for dir_object in sorted(root_dir.iterdir()):
         try:
-            species = dir_object.name
-            if species not in filehand_species:
+            if dir_object.name not in filehand_species:
                 continue
+            species = filehand_species[dir_object.name]
 
             print(f"{'-'*10} Collecting data for {species} {'-'*10}")
             rm_file = list(dir_object.glob(f"*.out"))

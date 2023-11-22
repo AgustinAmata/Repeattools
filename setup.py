@@ -10,6 +10,6 @@ setup(
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     install_requires=["ete3==3.1.3", "matplotlib==3.7.3",
                       "numpy==1.25.0", "pandas==2.0.3",
-                      "scipy==1.11.1", "seaborn==0.12.2",
-                      "scikit-learn==1.3.0"]
+                      "PyQt5==5.15.9", "scipy==1.11.1",
+                      "seaborn==0.12.2", "scikit-learn==1.3.0"]
 )

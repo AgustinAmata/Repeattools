@@ -1,6 +1,8 @@
 import argparse
 import gc
 import sys
+import traceback
+from uuid import uuid1
 from pathlib import Path
 
 from src.create_matrix import (create_te_count_matrix,
@@ -25,15 +27,15 @@ def argument_parser():
     parser = argparse.ArgumentParser(description=desc)
         
     help_input_dir = """Input directory containing the files
-    from RM and TES. Directory must contain two subdirectories
-    named RepeatMasker and TESorter"""
+    from RM and TES. Directory must contain individual subdirectories
+    for each species, which will contain the files from RM and TES"""
     parser.add_argument("--input", "-i", type=Path, help=help_input_dir,
                         required=True)
 
-    help_input_names_file = """Text file containing the names of the species 
-    for each RM/TES file. File must contain the common part for
-    both RM and TES files, followed by the name of the species 
-    (use underscores instead of whitespaces) and separated
+    help_input_names_file = """Text file containing the names of directories 
+    for each RM/TES file. File must contain the name of the directory,
+    followed by the name the user wants to use for future analyses
+    (use underscores instead of whitespaces), separated
     by a tab. Example: Peame105  Persea_americana"""
     parser.add_argument("--names", "-n", type=Path,
                         help=help_input_names_file, required=True)
@@ -131,20 +133,40 @@ def main():
     override = arguments.override
 
     root_dir = arguments.input
-    rm_dir = root_dir / "RepeatMasker"
-    te_dir = root_dir / "TESorter"
 
     out_folder = arguments.output
+
+    log_number = uuid1()
+    log_fhand = open(out_folder / f"RECollector.{log_number}.log", "w")
+    msg = f"Command used: {' '.join(sys.argv)}\n"
+    msg += f"Input directory: {root_dir.resolve()}\n"
+    msg += f"Output directory: {out_folder.resolve()}\n"
+    print(msg)
+    log_fhand.write(msg)
+    log_fhand.flush()
+
     if not out_folder.exists():
         out_folder.mkdir()
+        msg = f"{out_folder.resolve()} was not found. {out_folder.resolve()} was created\n"
+        print(msg)
+        log_fhand.write(msg)
+        log_fhand.flush()
     div_folder = out_folder.joinpath(f"{depth}_divergence_files")
     if not div_folder.exists():
         div_folder.mkdir()
+        msg = f"{div_folder.resolve()} was created\n"
+        print(msg)
+        log_fhand.write(msg)
+        log_fhand.flush()
 
     names_file = arguments.names
     with open(names_file) as names:
         filehand_species = read_names_file(names)
         print("Read names of species file")
+        msg = f"Names file location: {names_file.resolve()}\n"
+        print(msg)
+        log_fhand.write(msg)
+        log_fhand.flush()
 
     if arguments.chrom:
         chroms_file = arguments.chrom
@@ -152,117 +174,183 @@ def main():
         with open(chroms_file) as chroms:
             chrs_to_filter = read_chroms_file(chroms)
             print("Read file detailing chromosomes to filter")
+            msg = f"Chromosome file location: {chroms_file.resolve()}. Exclude: {chr_mode}\n"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.flush()
 
     if arguments.domains:
         if arguments.D:
             with open(arguments.D) as doms_file:
                 domains, clades, features_dict = read_doms_file(doms_file)
             print("Read data from additional file")
+            msg = f"Domains file location: {arguments.D.resolve()}\n"
+            msg2 = f"Domains: {domains}. Clades: {clades}. Features: {features_dict}\n"
+            print(msg, msg2)
+            log_fhand.write(msg)
+            log_fhand.write(msg2)
+            log_fhand.flush()
 
         else:
             domains = []
             clades = []
             features_dict = []
             print("Created conditions for domain filtering")
+            msg = f"Domains were filtered\n"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.flush()
 
     if arguments.per:
         threshold = arguments.t
         perc_mode = arguments.m
         print("Gathered conditions for percentage filtering")
+        msg = f"Percentage mode: {perc_mode}. Threshold: {threshold}\n"
+        print(msg)
+        log_fhand.write(msg)
+        log_fhand.flush()
 
-    species_counted_tes = []
-    for filehand in filehand_species:
-        species = filehand_species[filehand]
-        print(f"{'-'*10} Collecting data for {species} {'-'*10}")
-        rm_file = list(rm_dir.glob(f"{filehand}*.out"))
-        te_file = list(te_dir.glob(f"{filehand}*.cls.tsv"))
+    msg = f"{'-'*10} Checking each species directory {'-'*10}\n"
+    print(msg)
+    log_fhand.write(msg)
+    ignored_dirs = []
+    failed_dirs = []
+
+    for dir_object in sorted(root_dir.iterdir()):
+        if not dir_object.is_dir():
+            continue
+        if dir_object.name not in filehand_species:
+            ignored_dirs.append(dir_object.name)
+            continue
+
+        rm_file = list(dir_object.glob(f"*.out"))
+        te_file = list(dir_object.glob(f"*.cls.tsv"))
 
         if len(rm_file) != 1:
-            print("RepeatMasker file was not found/file name in names file was not clear enough")
-            print("Proceding with next species")
+            msg = f"{species}: RepeatMasker file was not found/file must end in .out and be the only one"
+            print(msg)
+            log_fhand.write(msg)
+            failed_dirs.append(msg)
+            filehand_species.pop(dir_object.name)
             continue
 
         if len(te_file) != 1:
-            print("TESorter file was not found/file name in names file was not clear enough")
-            print("Proceding with next species")
+            msg = f"{species}: TESorter file was not found/file must end in .cls.tsv and be the only one"
+            print(msg)
+            log_fhand.write(msg)
+            failed_dirs.append(msg)
+            filehand_species.pop(dir_object.name)
             continue
 
-        with open(rm_file[0]) as rm_fhand:
-            print(f"Reading {rm_file[0].name}")
-            rm_repeats = read_repeatmasker_out(rm_fhand)
-            print(f"Read {rm_file[0].name}")
-        with open(te_file[0]) as te_fhand:
-            print(f"Reading {te_file[0].name}")    
-            te_repeats = read_tesorter_cls_tsv(te_fhand)
-            print(f"Read {te_file[0].name}")
+    msg = f"Directories ignored by RECollector:\n"
+    log_fhand.write(msg)
+    log_fhand.write("\n".join(ignored_dirs) + "\n")
+    msg = f"Directories failed to be processed by RECollector:\n"
+    log_fhand.write(msg)
+    log_fhand.write("\n".join(failed_dirs) + "\n")
+    msg = f"Directories processed by RECollector:\n"
+    log_fhand.write(msg)
+    log_fhand.write("\n".join(list(filehand_species.keys())) + "\n")
+    log_fhand.write(f"{'-'*30}\n")
+    log_fhand.flush()
 
-        species_df = merge_inputs(rm_repeats, te_repeats)
-        print("Merged input files into a dataframe")
+    species_counted_tes = []
+    for dir_object in sorted(root_dir.iterdir()):
+        try:
+            species = dir_object.name
+            if species not in filehand_species:
+                continue
 
-        del rm_repeats, te_repeats
+            print(f"{'-'*10} Collecting data for {species} {'-'*10}")
+            rm_file = list(dir_object.glob(f"*.out"))
+            te_file = list(dir_object.glob(f"*.cls.tsv"))
 
-        if arguments.length:
-            print("Started filtering by length")
-            length = arguments.length
-            species_df = filter_df_by_length(species_df, length)
-            print("Finished filtering by length")
+            with open(rm_file[0]) as rm_fhand:
+                print(f"Reading {rm_file[0].name}")
+                rm_repeats = read_repeatmasker_out(rm_fhand)
+                print(f"Read {rm_file[0].name}")
+            with open(te_file[0]) as te_fhand:
+                print(f"Reading {te_file[0].name}")    
+                te_repeats = read_tesorter_cls_tsv(te_fhand)
+                print(f"Read {te_file[0].name}")
 
-        if arguments.chrom:
-            print("Started filtering by chromosomes")
-            selected_chrs = chrs_to_filter[species]
-            species_df = filter_df_by_chromosomes(species_df,
-                                                  selected_chrs,
-                                                  chr_mode)
-            print("Finished filtering by chromosomes")
+            species_df = merge_inputs(rm_repeats, te_repeats)
+            print("Merged input files into a dataframe")
 
-        if arguments.domains:
-            print("Started filtering by domains")
-            species_df = filter_df_by_domain(species_df,
-                                             domains, clades,
-                                             features_dict)
-            print("Finished filtering by domains")
+            del rm_repeats, te_repeats
 
-        if arguments.per:
-            print("Started filtering by percentage")
-            species_df = filter_df_by_percentages(species_df,
-                                                  threshold,
-                                                  perc_mode)
-            print("Finished filtering by percentage")
+            if arguments.length:
+                print("Started filtering by length")
+                length = arguments.length
+                species_df = filter_df_by_length(species_df, length)
+                print("Finished filtering by length")
 
-        print(f"Counting TEs for {depth}")
-        counted_tes = count_tes(species_df, species, depth, override)
-        species_counted_tes.append(counted_tes)
-        print(f"Counted TEs for {depth}")
-        
-        print(f"{'*'*5} Creating {depth} divergence data file(s) {'*'*5}") 
-        depth_cats = species_df[depth].unique()   
-        for cat in depth_cats:
-            cat_df = species_df.loc[species_df[depth] == cat]
-            long_df_div = convert_data_to_long_df_div(cat_df, species, depth)
-            div_csv_fpath = div_folder.joinpath(f"{cat}_divergence.csv")
-            if not div_csv_fpath.exists():
-                long_df_div.to_csv(div_csv_fpath, index=False,
-                                    chunksize=100000)
-                print(f"{cat.capitalize()} divergence data file created")
+            if arguments.chrom:
+                print("Started filtering by chromosomes")
+                selected_chrs = chrs_to_filter[species]
+                species_df = filter_df_by_chromosomes(species_df,
+                                                    selected_chrs,
+                                                    chr_mode)
+                print("Finished filtering by chromosomes")
 
-            else:
-                long_df_div.to_csv(div_csv_fpath, mode="a",
-                                    index=False, header=False,
-                                    chunksize=100000)
-                print(f"{cat.capitalize()} divergence data file updated")
+            if arguments.domains:
+                print("Started filtering by domains")
+                species_df = filter_df_by_domain(species_df,
+                                                domains, clades,
+                                                features_dict)
+                print("Finished filtering by domains")
 
-        del species_df, long_df_div
-        gc.collect()
-    
+            if arguments.per:
+                print("Started filtering by percentage")
+                species_df = filter_df_by_percentages(species_df,
+                                                    threshold,
+                                                    perc_mode)
+                print("Finished filtering by percentage")
+
+            print(f"Counting TEs for {depth}")
+            counted_tes = count_tes(species_df, species, depth, override)
+            species_counted_tes.append(counted_tes)
+            print(f"Counted TEs for {depth}")
+            
+            print(f"{'*'*5} Creating {depth} divergence data file(s) {'*'*5}") 
+            depth_cats = species_df[depth].unique()   
+            for cat in depth_cats:
+                cat_df = species_df.loc[species_df[depth] == cat]
+                long_df_div = convert_data_to_long_df_div(cat_df, species, depth)
+                div_csv_fpath = div_folder.joinpath(f"{cat}_divergence.csv")
+                if not div_csv_fpath.exists():
+                    long_df_div.to_csv(div_csv_fpath, index=False,
+                                        chunksize=100000)
+                    print(f"{cat.capitalize()} divergence data file created")
+
+                else:
+                    long_df_div.to_csv(div_csv_fpath, mode="a",
+                                        index=False, header=False,
+                                        chunksize=100000)
+                    print(f"{cat.capitalize()} divergence data file updated")
+
+            del species_df, long_df_div
+            gc.collect()
+        except Exception as e:
+            msg = f"{'*'*10} An error occurred while processing {species}. See traceback below {'*'*10}\n"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.write(traceback.format_exc())
+            log_fhand.close()
+            raise
+
     print(f"{'-'*10} Performed operations for all accepted species {'-'*10}")
     print("Creating TE count matrix")
     te_count_matrix = create_te_count_matrix(species_counted_tes)
     print("TE count matrix created")
 
-    c_matrix_fpath = out_folder.joinpath(f"{out_folder.name}_count_matrix.csv")
+    c_matrix_fpath = out_folder.joinpath(f"{out_folder.name}_count_matrix_{log_number}.csv")
 
     te_count_matrix.to_csv(c_matrix_fpath, index_label=depth)
-    print("TE count matrix file generated")
+    msg = f"TE count matrix file created at {c_matrix_fpath.resolve()}\n"
+    print(msg)
+    log_fhand.write(msg)
+    log_fhand.close()
 
 if __name__ == "__main__":
     main()

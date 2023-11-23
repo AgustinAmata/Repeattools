@@ -247,7 +247,7 @@ def main():
                 for i in range(4):
                     next(rm_fhand)
             except Exception as e:
-                msg = f"{species}: RepeatMasker file was empty"
+                msg = f"{species}: RepeatMasker file was empty\n"
                 print(msg)
                 log_fhand.write(msg)
                 failed_dirs.append(msg)
@@ -259,22 +259,22 @@ def main():
                 for i in range(2):
                     next(te_fhand)
             except Exception as e:
-                msg = f"{species}: TESorter file was empty"
+                msg = f"{species}: TESorter file was empty\n"
                 print(msg)
                 log_fhand.write(msg)
                 failed_dirs.append(msg)
                 filehand_species.pop(dir_object.name)
                 continue
 
-    msg = f"{'*'*30}"
+    msg = f"{'*'*30}\n"
     msg += f"Directories ignored by RECollector:\n"
     log_fhand.write(msg)
     log_fhand.write("\n".join(ignored_dirs) + "\n")
-    msg = f"{'*'*30}"
+    msg = f"{'*'*30}\n"
     msg += f"Directories failed to be processed by RECollector:\n"
     log_fhand.write(msg)
     log_fhand.write("\n".join(failed_dirs) + "\n")
-    msg = f"{'*'*30}"
+    msg = f"{'*'*30}\n"
     msg += f"Directories processed by RECollector:\n"
     log_fhand.write(msg)
     log_fhand.write("\n".join(list(filehand_species.keys())) + "\n")

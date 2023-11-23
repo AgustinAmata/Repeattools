@@ -24,7 +24,7 @@ def merge_inputs(target_df, te_df):
                  "repeat": "category", "tes order":"category",
                  "tes superfamily": "category", "clade": "category"}
     target_df = target_df.merge(te_df, how="left", on=merge_cols).astype(cats_dict)
-
+    target_df["superfamily"] = target_df["superfamily"].replace({"SINE?": "SINE"})
     #Add "Unknown" to repeats of RepeatMasker that do not have
     #a match in TESorter
     none_cols = ["tes order", "tes superfamily", "clade"]
@@ -153,6 +153,7 @@ def read_tesorter_cls_tsv(input_fhand):
     #Separate data of #TE column
     new_cols = ["seqid", "start", "end", "repeat", "class/superfamily"]
     te_input[new_cols] = te_input.pop("#TE").str.extract("(.*):(\d*)..(\d*)_{1}(.*)#(.*)", expand=True)
+    te_input["seqid"] = te_input["seqid"].astype("str")
     te_input["repeat"] = te_input["repeat"].astype("category")
     te_input[["start","end"]] = te_input[["start","end"]].astype("int32")
 

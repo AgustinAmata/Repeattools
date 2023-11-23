@@ -3,7 +3,7 @@ import pandas as pd
 
 def convert_data_to_long_df_div(species_df, species, depth):
     """Convert divergence data of RECollector to a long-form DataFrame.
-    
+
     Parameters
     ----------
     species_df : `pandas.DataFrame`
@@ -26,17 +26,17 @@ def convert_data_to_long_df_div(species_df, species, depth):
     #Create new column for species
     sp_df.insert(0, "species", species)
     selected_columns = ["species", depth, "per div"]
-    
+
     #Select columns and their datatypes
     convert_dict = {"species": "category", depth: "category",
                     "per div": "float16"}
     long_df_div = sp_df.loc[:, selected_columns].astype(convert_dict)
-        
+
     return long_df_div
 
 def get_large_dfs(file, exclude=False, transpose=False):
     """Creates DataFrame from large files.
-    
+
     Used for RECollector's outputs.
 
     Parameters
@@ -67,9 +67,9 @@ def get_large_dfs(file, exclude=False, transpose=False):
             chunk = chunk.astype({species: "category",
                                     cat_name: "category",
                                     per_div: "float16"})
-            
+
             chunk_list.append(chunk)
-            
+
         df_concat = pd.concat(chunk_list).astype({species: "category",
                                     cat_name: "category",
                                     per_div: "float16"})
@@ -82,9 +82,11 @@ def get_large_dfs(file, exclude=False, transpose=False):
 
         if exclude and transpose:
                 te_count_df = te_count_df.T
-                excluded = ["Unknown", "Low_complexity", "Satellite", "Simple_repeat"]
+                excluded = ["Unknown", "Low_complexity",
+                            "Satellite", "Simple_repeat",
+                            "LTR", "DNA", "rRNA"]
                 te_count_df = te_count_df.drop(columns=excluded, errors="ignore")
-            
+
         elif not exclude and transpose:
             te_count_df = te_count_df.T
 

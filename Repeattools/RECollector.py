@@ -239,14 +239,16 @@ def main():
             failed_dirs.append(msg)
             filehand_species.pop(dir_object.name)
             continue
-
-    msg = f"Directories ignored by RECollector:\n"
+    msg = f"{'*'*30}"
+    msg += f"Directories ignored by RECollector:\n"
     log_fhand.write(msg)
     log_fhand.write("\n".join(ignored_dirs) + "\n")
-    msg = f"Directories failed to be processed by RECollector:\n"
+    msg = f"{'*'*30}"
+    msg += f"Directories failed to be processed by RECollector:\n"
     log_fhand.write(msg)
     log_fhand.write("\n".join(failed_dirs) + "\n")
-    msg = f"Directories processed by RECollector:\n"
+    msg = f"{'*'*30}"
+    msg += f"Directories processed by RECollector:\n"
     log_fhand.write(msg)
     log_fhand.write("\n".join(list(filehand_species.keys())) + "\n")
     log_fhand.write(f"{'-'*30}\n")
@@ -347,18 +349,18 @@ def main():
     c_matrix_fpath = out_folder.joinpath(f"{out_folder.name}_count_matrix_{log_number}.csv")
 
     te_count_matrix.to_csv(c_matrix_fpath, index_label=depth)
-    msg = f"TE count matrix file created at {c_matrix_fpath.resolve()}\n"
+    msg = f"{'-'*10} TE count matrix file created at {c_matrix_fpath.resolve()} {'-'*10}\n"
     print(msg)
     log_fhand.write(msg)
 
     processed_fpath = out_folder.joinpath(f"RECollector_processed_species_{log_number}.txt")
-    with open(processed_fpath) as proc_file:
+    with open(processed_fpath, "w") as proc_file:
         for species in processed_species:
             proc_file.write("\t".join([species, species]) + "\n")
-            msg = f"Created file for processed species at {out_folder.resolve()}"
-            print(msg)
-            log_fhand.write(msg)
-            log_fhand.write(traceback.format_exc())
+        msg = f"{'-'*10} Created file for processed species at {processed_fpath.resolve()} {'-'*10}"
+        print(msg)
+        log_fhand.write(msg)
+        log_fhand.write(traceback.format_exc())
     log_fhand.close()
 
 if __name__ == "__main__":

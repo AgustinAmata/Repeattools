@@ -387,7 +387,6 @@ def main():
         msg = f"{'-'*10} Created file for processed species at {processed_fpath.resolve()} {'-'*10}"
         print(msg)
         log_fhand.write(msg)
-        log_fhand.write(traceback.format_exc())
     log_fhand.close()
 
 if __name__ == "__main__":

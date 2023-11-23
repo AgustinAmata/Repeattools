@@ -253,11 +253,13 @@ def main():
     log_fhand.flush()
 
     species_counted_tes = []
+    processed_species = []
     for dir_object in sorted(root_dir.iterdir()):
         try:
             if dir_object.name not in filehand_species:
                 continue
             species = filehand_species[dir_object.name]
+            processed_species.append(species)
 
             print(f"{'-'*10} Collecting data for {species} {'-'*10}")
             rm_file = list(dir_object.glob(f"*.out"))
@@ -348,6 +350,15 @@ def main():
     msg = f"TE count matrix file created at {c_matrix_fpath.resolve()}\n"
     print(msg)
     log_fhand.write(msg)
+
+    processed_fpath = out_folder.joinpath(f"RECollector_processed_species_{log_number}.txt")
+    with open(processed_fpath) as proc_file:
+        for species in processed_species:
+            proc_file.write("\t".join([species, species]) + "\n")
+            msg = f"Created file for processed species at {out_folder.resolve()}"
+            print(msg)
+            log_fhand.write(msg)
+            log_fhand.write(traceback.format_exc())
     log_fhand.close()
 
 if __name__ == "__main__":

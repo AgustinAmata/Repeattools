@@ -224,6 +224,7 @@ def main():
         rm_file = list(dir_object.glob(f"*.out"))
         te_file = list(dir_object.glob(f"*.cls.tsv"))
 
+        #Check that each species contains both files
         if len(rm_file) != 1:
             msg = f"{species}: RepeatMasker file was not found/file must end in .out and be the only one"
             print(msg)
@@ -239,6 +240,32 @@ def main():
             failed_dirs.append(msg)
             filehand_species.pop(dir_object.name)
             continue
+
+        #Check that those files are not empty and contain at least one read
+        with open(rm_file[0]) as rm_fhand:
+            try:
+                for i in range(4):
+                    next(rm_fhand)
+            except Exception as e:
+                msg = f"{species}: RepeatMasker file was empty"
+                print(msg)
+                log_fhand.write(msg)
+                failed_dirs.append(msg)
+                filehand_species.pop(dir_object.name)                
+                continue
+
+        with open(te_file[0]) as te_fhand:
+            try:
+                for i in range(2):
+                    next(te_fhand)
+            except Exception as e:
+                msg = f"{species}: TESorter file was empty"
+                print(msg)
+                log_fhand.write(msg)
+                failed_dirs.append(msg)
+                filehand_species.pop(dir_object.name)
+                continue
+
     msg = f"{'*'*30}"
     msg += f"Directories ignored by RECollector:\n"
     log_fhand.write(msg)

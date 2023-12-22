@@ -8,13 +8,14 @@ import seaborn as sns
 from ete3 import Tree, NodeStyle
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Patch
+from scipy.stats import zscore
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from .plot_eteTree import plot_tree
 from .utils import get_large_dfs
 
-def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
+def get_count_matrix_heatmap(matrix_df, out_file, group_dict, hsize, dendro=False):
     """Generate heatmap from TE count matrix.
     
     Parameters
@@ -28,7 +29,10 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
     group_dict : dictionary
         Contains the groups defined by the user. Keys: species;
         values: group.
-    
+
+    hsize : tuple (width, height)
+        Size of the figure in inches
+
     dendro: bool, default: False
         If True, the generated heatmap will contain a dendrogram
         for the species (rows).
@@ -36,24 +40,36 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, dendro=False):
     #Create colors for the groups and the legend
     group_df = matrix_df.index.map(group_dict)
     groups = group_df.unique()
-    group_pal = sns.color_palette("YlOrBr", len(groups))
+    group_pal = sns.color_palette("hls", len(groups))
     group_lut = dict(zip(groups, group_pal))
     group_colors = group_df.map(group_lut)
 
     #Heatmap creation with previous standardization
-    cm_heat = sns.clustermap(matrix_df, z_score=1,
-                             cmap="mako", col_cluster=False,
+    standard_matrix = matrix_df.apply(lambda col: zscore(col) if col.std() != 0 else col, axis=0)
+    cm_heat = sns.clustermap(standard_matrix,
+                             cmap="magma_r", col_cluster=True,
                              row_colors=group_colors,
-                             row_cluster=dendro, figsize=(15,15))
-    
+                             row_cluster=dendro, figsize=hsize,
+                             cbar_kws={"orientation":"horizontal"}, vmin=0)
+    cm_heat.ax_col_dendrogram.set_visible(False)
+    dendro_box = cm_heat.ax_col_dendrogram.get_position()
+    dendro_box.y0 = dendro_box.y0 + 0.02
+    dendro_box.y1 = dendro_box.y0 + 0.02
+    cm_heat.cax.set_position(dendro_box)
+
     #Add legend
     handles = [Patch(facecolor=group_lut[name]) for name in group_lut]
+    fontsize_scaled = math.ceil(hsize[1])
+    legend_box = cm_heat.ax_col_dendrogram.get_position()
+    yper = 1.5/hsize[1]
+    legend_box.y0 = dendro_box.y1 + yper
+    legend_box.y1 = legend_box.y0 + 0.08
     plt.legend(handles, group_lut, title='Groups',
-               bbox_to_anchor=(0.5, 0.96),
+               bbox_to_anchor=legend_box,
                ncol=math.ceil(len(handles)/4),
                bbox_transform=plt.gcf().transFigure,
-               loc='upper center', title_fontsize=18,
-               fontsize=18)
+               loc='upper center', title_fontsize=fontsize_scaled,
+               fontsize=fontsize_scaled)
     cm_heat.ax_heatmap.set_xlabel("")
     cm_heat.savefig(out_file, dpi=200)
 

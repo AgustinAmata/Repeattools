@@ -84,7 +84,10 @@ def get_large_dfs(file, exclude=False, transpose=False):
                 te_count_df = te_count_df.T
                 excluded = ["Unknown", "Low_complexity",
                             "Satellite", "Simple_repeat",
-                            "LTR", "DNA", "rRNA"]
+                            "LTR", "DNA", "rRNA", "snRNA",
+                            "ARTEFACT", "tRNA-CR1",
+                            "tRNA-Core-RTE", "tRNA-Deu-RTE",
+                            "tRNA-L1", "tRNA-RTE", "tRNA"]
                 te_count_df = te_count_df.drop(columns=excluded, errors="ignore")
 
         elif not exclude and transpose:

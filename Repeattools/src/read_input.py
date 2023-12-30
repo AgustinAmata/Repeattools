@@ -60,10 +60,7 @@ def read_repeatmasker_out(input_fhand):
     def create_cf_list(line):
         class_family = line.split("/")
         if len(class_family) == 1:
-            if class_family[0] == "Unknown":
-                class_family.append("Unknown")
-            else:
-                class_family.append(class_family[0])
+            class_family.append("Unknown")
         return class_family
 
     #Initial columns of the the file, columns that will be

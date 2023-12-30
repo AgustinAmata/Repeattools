@@ -31,7 +31,7 @@ def argument_parser():
     required for RECollector."""
     parser.add_argument("--names", "-n", type=Path,
                         help=help_input_names_file, required=False)
-    help_exclude = """If selected, it excludes from the plots
+    help_exclude = """If selected, it excludes from the violin plots
     unknown data and data belonging to other repetitive elements:
     Low_complexity, Satellite, Simple_repeat, LTR, DNA, rRNA, snRNA,
     ARTEFACT, tRNA-CR1, tRNA-Core-RTE, tRNA-Deu-RTE, tRNA-L1, tRNA-RTE
@@ -117,7 +117,7 @@ def main():
                 new_list = []
                 cols_to_exclude = ["Unknown", "Low_complexity",
                                    "Satellite", "Simple_repeat",
-                                   "LTR", "DNA", "rRNA", "snRNA",
+                                   "rRNA", "snRNA",
                                    "ARTEFACT", "tRNA-CR1",
                                    "tRNA-Core-RTE", "tRNA-Deu-RTE",
                                    "tRNA-L1", "tRNA-RTE", "tRNA"]

@@ -24,7 +24,6 @@ def merge_inputs(target_df, te_df):
                  "repeat": "category", "tes order":"category",
                  "tes superfamily": "category", "clade": "category"}
     target_df = target_df.merge(te_df, how="left", on=merge_cols).astype(cats_dict)
-    target_df["superfamily"] = target_df["superfamily"].replace({"SINE?": "SINE"})
     #Add "Unknown" to repeats of RepeatMasker that do not have
     #a match in TESorter
     none_cols = ["tes order", "tes superfamily", "clade"]

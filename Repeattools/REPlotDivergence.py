@@ -117,7 +117,10 @@ def main():
                 new_list = []
                 cols_to_exclude = ["Unknown", "Low_complexity",
                                    "Satellite", "Simple_repeat",
-                                   "LTR", "DNA", "rRNA"]
+                                   "LTR", "DNA", "rRNA", "snRNA",
+                                   "ARTEFACT", "tRNA-CR1",
+                                   "tRNA-Core-RTE", "tRNA-Deu-RTE",
+                                   "tRNA-L1", "tRNA-RTE", "tRNA"]
                 for file in files_list:
                     for col in cols_to_exclude:
                         if col in file.name:

@@ -45,23 +45,6 @@ def argument_parser():
     parser.add_argument("--length", "-l", type=int,
                         help= help_filter_len, required=False)
 
-    desc_filter_chrom = """If selected, data will be filtered to only
-    contain (or exclude) the chromosomes of the species in the file.
-    Requires a text file composed of the name of the species and the
-    desired, comma-separated chromosomes (name and chrs must be
-    separated with a tab). Example: Persea_americana    chr1,chr2,chr3"""
-    chrom_group = parser.add_argument_group("Filter by chromosomes",
-                                            description=desc_filter_chrom)
-    help_filter_chrom = """Select to allow filtering by chromosomes.
-    By default data will only contain the selected chromosomes
-    for the target species"""
-    chrom_group.add_argument("--chrom", "-c", type=Path,
-                             help=help_filter_chrom, required=False)
-    help_exclude_chrom = """Select to exclude the specified chromosomes
-    from the data"""
-    chrom_group.add_argument("-E", help=help_exclude_chrom, default=False,
-                             action="store_true", required=False)
-
     desc_filter_domains = """By default, it filters data to include
     repeats that contain specified domains (given by TES).
     An additional file can be introduced to further filter
@@ -102,18 +85,18 @@ def argument_parser():
                             nargs=1)
 
     help_matrix_depth = """Select the depth of the TE count matrix
-    (class, superfamily, tes order, tes superfamily, clade).
-    Default superfamily."""
-    depth_choices = ["superfamily", "class", "tes order",
-                     "tes superfamily", "clade"]
+    (class, subclass, superfamily, element, tes_order,
+    tes_superfamily, clade). Default superfamily."""
+    depth_choices = ["class","subclass", "superfamily", "element",
+                     "tes_order", "tes_superfamily", "clade"]
     parser.add_argument("--depth", help=help_matrix_depth,
                         choices=depth_choices,
                         default="superfamily", required=False)
-    help_override = """When selected, and when selected depth for the TE
-    count matrix is 'superfamily' or 'class', repeats with unknown values
-    for these columns will be overriden by their correspondent
-    'tes superfamily' and 'tes order', respectively (if there are values
-    for these columns in a given repeat)."""
+    help_override = """When selected, unknown repeats from RepeatMasker will be
+    rewritten with classification data from TESorter.
+    It will also rewrite repeats which have only been
+    identified as Class II transposons, given that their
+    TESorter classification also belongs to this Class."""
     parser.add_argument("--override", help=help_override,
                         action="store_true", required=False)
     help_output = """Output folder path. Generated files will
@@ -164,17 +147,6 @@ def main():
         print(msg)
         log_fhand.write(msg)
         log_fhand.flush()
-
-    if arguments.chrom:
-        chroms_file = arguments.chrom
-        chr_mode = arguments.E
-        with open(chroms_file) as chroms:
-            chrs_to_filter = read_chroms_file(chroms)
-            print("Read file detailing chromosomes to filter")
-            msg = f"Chromosome file location: {chroms_file.resolve()}. Exclude: {chr_mode}\n"
-            print(msg)
-            log_fhand.write(msg)
-            log_fhand.flush()
 
     if arguments.domains:
         if arguments.D:
@@ -303,7 +275,7 @@ def main():
                 te_repeats = read_tesorter_cls_tsv(te_fhand)
                 print(f"Read {te_file[0].name}")
 
-            species_df = merge_inputs(rm_repeats, te_repeats)
+            species_df = merge_inputs(rm_repeats, te_repeats, override)
             print("Merged input files into a dataframe")
 
             del rm_repeats, te_repeats
@@ -313,14 +285,6 @@ def main():
                 length = arguments.length
                 species_df = filter_df_by_length(species_df, length)
                 print("Finished filtering by length")
-
-            if arguments.chrom:
-                print("Started filtering by chromosomes")
-                selected_chrs = chrs_to_filter[species]
-                species_df = filter_df_by_chromosomes(species_df,
-                                                    selected_chrs,
-                                                    chr_mode)
-                print("Finished filtering by chromosomes")
 
             if arguments.domains:
                 print("Started filtering by domains")
@@ -337,7 +301,7 @@ def main():
                 print("Finished filtering by percentage")
 
             print(f"Counting TEs for {depth}")
-            counted_tes = count_tes(species_df, species, depth, override)
+            counted_tes = count_tes(species_df, species, depth)
             species_counted_tes.append(counted_tes)
             print(f"Counted TEs for {depth}")
             
@@ -373,7 +337,7 @@ def main():
     te_count_matrix = create_te_count_matrix(species_counted_tes)
     print("TE count matrix created")
 
-    c_matrix_fpath = out_folder.joinpath(f"{out_folder.name}_count_matrix_{log_number}.csv")
+    c_matrix_fpath = out_folder.joinpath(f"{out_folder.name}_{depth}_count_matrix_{log_number}.csv")
 
     te_count_matrix.to_csv(c_matrix_fpath, index_label=depth)
     msg = f"{'-'*10} TE count matrix file created at {c_matrix_fpath.resolve()} {'-'*10}\n"

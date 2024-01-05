@@ -1,6 +1,6 @@
 import pandas as pd
-import numpy as np
-def count_tes(input_df, species_name, col="superfamily", override=False):
+
+def count_tes(input_df, species_name, col="superfamily"):
     """Counts each element of the selected column.
 
     Parameters
@@ -14,12 +14,6 @@ def count_tes(input_df, species_name, col="superfamily", override=False):
 
     col : str, default: 'superfamily'
         Column that will be selected and counted.
-
-    override : bool, default: False
-        Select to override 'Unknown' values of the 'superfamily'
-        and 'class' columns with their correspondent values
-        in 'tes superfamily' and 'tes order', respectively.
-        Only works with said columns.
         
     Returns
     -------
@@ -32,18 +26,6 @@ def count_tes(input_df, species_name, col="superfamily", override=False):
 
     if col == "domains":
         input_df["domains"] = input_df['domains'].apply(lambda x: ','.join(map(str, x)))
-
-    elif col in ("superfamily", "class") and override:
-        if col == "superfamily":
-            tesorter_to_repmask = {"MuDR_Mutator": "MULE-MuDR", "PIF_Harbinger": "PIF-Harbinger"}
-        else:
-            tesorter_to_repmask = {"TIR": "DNA"}
-        target_col_values = input_df[col] == "Unknown"
-        copy_col = "tes superfamily" if col == "superfamily" else "tes order"
-        input_df[col] = input_df[col].astype("object")
-        input_df.loc[target_col_values, col] = input_df.loc[target_col_values, copy_col]
-        input_df[col] = input_df[col].astype("category")
-        input_df[col] = input_df[col].replace(tesorter_to_repmask)
 
     counted_tes = input_df.value_counts(col).rename(species_name).astype("int32")
     return counted_tes

@@ -198,7 +198,7 @@ def main():
 
         #Check that each species contains both files
         if len(rm_file) != 1:
-            msg = f"{species}: RepeatMasker file was not found/file must end in .out and be the only one"
+            msg = f"{species}: RepeatMasker file was not found/file must end in .out and be the only one\n"
             print(msg)
             log_fhand.write(msg)
             failed_dirs.append(msg)
@@ -206,7 +206,7 @@ def main():
             continue
 
         if len(te_file) != 1:
-            msg = f"{species}: TESorter file was not found/file must end in .cls.tsv and be the only one"
+            msg = f"{species}: TESorter file was not found/file must end in .cls.tsv and be the only one\n"
             print(msg)
             log_fhand.write(msg)
             failed_dirs.append(msg)

@@ -84,7 +84,8 @@ def merge_inputs(target_df, te_df, override=False):
 
     #Create new classification for the data
     classif_cols = ["class", "subclass", "superfamily", "element"]
-    cl_fam_col = target_df["class/family"].astype("str")
+    #Get "class/family" column and remove "?" if there is any
+    cl_fam_col = target_df["class/family"].astype("str").replace(to_replace="\?", value="", regex=True)
     for i, col in enumerate(classif_cols):
         if i==3: #Add "clade" data from Copia and Gypsy to the classification
             target_df[col] = cl_fam_col.apply(lambda x: classifier[x][i])

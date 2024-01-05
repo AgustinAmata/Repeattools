@@ -33,9 +33,11 @@ def argument_parser():
                         help=help_input_names_file, required=False)
     help_exclude = """If selected, it excludes from the violin plots
     unknown data and data belonging to other repetitive elements:
-    Low_complexity, Satellite, Simple_repeat, LTR, DNA, rRNA, snRNA,
-    ARTEFACT, tRNA-CR1, tRNA-Core-RTE, tRNA-Deu-RTE, tRNA-L1, tRNA-RTE
-    and tRNA"""
+    Artifact, Other, Accidental, Low_complexity, Simple_repeat,
+    Normally_Non-integrating_Virus, Pseudogene, RNA, rRNA, Tandem_repeat,
+    Satellite, Acromeric, Centromeric, Macro, Subtelomeric, W-chromosomal,
+    Y-chromosomal, scRNA, Segmental_Duplication, Simple, snRNA, tRNA, and
+    DFAM-Unknown_Centromeric"""
     parser.add_argument("--exclude", "-e", help=help_exclude,
                         action="store_true", default=False,
                         required=False)
@@ -115,12 +117,13 @@ def main():
             files_list = list(violin_dir.glob("*"))
             if exclude:
                 new_list = []
-                cols_to_exclude = ["Unknown", "Low_complexity",
-                                   "Satellite", "Simple_repeat",
-                                   "rRNA", "snRNA",
-                                   "ARTEFACT", "tRNA-CR1",
-                                   "tRNA-Core-RTE", "tRNA-Deu-RTE",
-                                   "tRNA-L1", "tRNA-RTE", "tRNA"]
+                cols_to_exclude = ["Artifact", "Other", "Accidental", "Low_complexity",
+                                   "Simple_repeat", "Normally_Non-integrating_Virus",
+                                   "Pseudogene", "RNA", "rRNA", "Tandem_repeat",
+                                   "Satellite", "Acromeric", "Centromeric", "Macro",
+                                   "Subtelomeric", "W-chromosomal", "Y-chromosomal",
+                                   "scRNA", "Segmental_Duplication", "Simple", "snRNA",
+                                   "tRNA", "DFAM-Unknown_Centromeric", "Unknown"]
                 for file in files_list:
                     for col in cols_to_exclude:
                         if col in file.name:

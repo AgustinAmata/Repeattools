@@ -24,9 +24,11 @@ def argument_parser():
                         help=help_matrix_input, required=True)
     help_exclude_unknown = """If selected, it excludes from the plots
     unknown data and data belonging to other repetitive elements:
-    Low_complexity, Satellite, Simple_repeat, LTR, DNA, rRNA, snRNA,
-    ARTEFACT, tRNA-CR1, tRNA-Core-RTE, tRNA-Deu-RTE, tRNA-L1, tRNA-RTE
-    and tRNA"""
+    Artifact, Other, Accidental, Low_complexity, Simple_repeat,
+    Normally_Non-integrating_Virus, Pseudogene, RNA, rRNA, Tandem_repeat,
+    Satellite, Acromeric, Centromeric, Macro, Subtelomeric, W-chromosomal,
+    Y-chromosomal, scRNA, Segmental_Duplication, Simple, snRNA, tRNA, and
+    DFAM-Unknown_Centromeric"""
     parser.add_argument("--exclude", "-e", help=help_exclude_unknown,
                         action="store_true", default=False,
                         required=False)

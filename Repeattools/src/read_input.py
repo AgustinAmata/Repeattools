@@ -1,29 +1,6 @@
 import pandas as pd
-from pathlib import Path
 
-#Get file for TE classification and process it
-te_file = Path(__file__).parent.parent.absolute().joinpath("static/TEClasses_RECollector.tsv")
-tes_rm_equiv_file = Path(__file__).parent.parent.absolute().joinpath("static/TES-RM_equiv.tsv")
-
-#Data for new classification system
-classifier = {}
-with open(te_file) as classif_file:
-    for line in classif_file:
-        line = line.strip("\n")
-        element_classification = line.split("\t")
-        element = element_classification[0]
-        classification = element_classification[1]
-        classifier[element] = classification.split(";")
-
-#Data to detect equal RepeatMasker classification values in TESorter
-tes_rm_dict = {}
-with open(tes_rm_equiv_file) as equiv_file:
-    for line in equiv_file:
-        line = line.strip("\n")
-        tes_rm = line.split("\t")
-        tes_cf = tes_rm[0]
-        rm_equiv = tes_rm[1]
-        tes_rm_dict[tes_cf] = rm_equiv
+from src.config import CLASSIFIER_FOR_RECOLLECTOR as classifier, TESORTER_TO_RM_EQUIV_FOR_RECOLLECTOR as tes_rm_dict
 
 def merge_inputs(target_df, te_df, override=False):
     """Merges inputs from both RepeatMasker and TESorter.
@@ -133,13 +110,6 @@ def read_repeatmasker_out(input_fhand):
     -------
     rm_input : `pandas.DataFrame`
     """
-    #Function to prepare for separation of the class/family column
-    # def create_cf_list(line):
-    #     class_family = line.split("/")
-    #     if len(class_family) == 1:
-    #         class_family.append("Unknown")
-    #     return class_family
-
     #Initial columns of the the file, columns that will be
     #used and their datatypes
     fieldnames = [

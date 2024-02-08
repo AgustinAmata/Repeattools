@@ -53,35 +53,6 @@ def create_te_count_matrix(list_of_inputs):
     te_count_matrix = te_count_matrix.fillna(0).astype("int32")
     return te_count_matrix
 
-def filter_df_by_chromosomes(df_to_filter, chromosomes, exclude=False):
-    """Filters a dataframe based on a list of chromosomes.
-    
-    Parameters
-    ----------
-    df_to_filter : `pandas.DataFrame`
-        Dataframe containing a column that specifies the chromosome
-        of each row.
-
-    chromosomes : list
-        List of chromosomes to filter.
-
-    exclude : bool, default: False
-        If True, the dataframe will be filtered to not contain
-        the specified chromosomes.
-
-    Returns
-    -------
-    filtered_df : `pandas.DataFrame`
-        Dataframe containing (or excluding) the specified chromosomes.
-    """
-    if exclude:
-        filtered_df = df_to_filter[~df_to_filter.seqid.apply(lambda x: x in chromosomes)]
-
-    else:
-        filtered_df = df_to_filter[df_to_filter.seqid.apply(lambda x: x in chromosomes)]
-
-    return filtered_df
-
 def filter_df_by_domain(df_to_filter, doms, clades, special_features):
     """Filters a dataframe to remove repeats that do not contain data on their domains.
     

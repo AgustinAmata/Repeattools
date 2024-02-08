@@ -96,35 +96,6 @@ def get_large_dfs(file, exclude=False, transpose=False):
 
         return te_count_df
 
-def read_chroms_file(chr_file):
-    """Reads the file for chromosome filtering.
-    
-    Used for RECollector's chromosome filtering step.
-
-    Parameters
-    ----------
-    chr_file : file
-        File containing data to filter by chromosomes.
-        Each row corresponds to a given species: the name
-        of the species must first provided followed by
-        its specified chromosomes, separated by a tab.
-        For several chromosomes, they must separated by
-        commas.
-    
-    Returns
-    -------
-    chrs_to_filter : dict
-        Keys correspond to the names of the species, whereas
-        values consist of a list of the selected chromosomes.
-    """
-    chrs_to_filter = {}
-    for species_chrom in chr_file:
-        species_chrom = species_chrom.strip("\n").split("\t")
-        sp_name = species_chrom[0]
-        chrs = species_chrom[1].split(",")
-        chrs_to_filter[sp_name] = chrs
-    return chrs_to_filter
-
 def read_doms_file(doms_file):
     """Reads the file for domain filtering
     

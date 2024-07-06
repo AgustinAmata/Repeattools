@@ -28,7 +28,9 @@ def argument_parser():
                         help=help_divergence_violin, required=False)
     help_input_names_file = """Text file containing the names of all 
     the species analyzed by RECollector, that is, the same file
-    required for RECollector."""
+    required for RECollector. Species not included in this file
+    will be excluded (only available when no
+    Newick tree file is given)"""
     parser.add_argument("--names", "-n", type=Path,
                         help=help_input_names_file, required=False)
     help_exclude = """If selected, it excludes from the violin plots
@@ -51,7 +53,8 @@ def argument_parser():
     parser.add_argument("--box", "-b", type=Path, default=False,
                         help=help_divergence_box, required=False)
     help_box_group_file = """Tab-separated file with the species and the
-    groups they belong to"""
+    groups they belong to. Species not included in this file
+    will be excluded"""
     parser.add_argument("--groups", "-g", type=Path,
                         help=help_box_group_file, required=False)
 

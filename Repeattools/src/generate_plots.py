@@ -37,6 +37,9 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, hsize, dendro=Fals
         If True, the generated heatmap will contain a dendrogram
         for the species (rows).
     """
+    plt.rc('legend',fontsize="xx-large",title_fontsize="xx-large")
+    plt.rc('axes',titlesize="x-large")
+    plt.rc('axes',labelsize="x-large")
     #Create colors for the groups and the legend
     group_df = matrix_df.index.map(group_dict)
     groups = group_df.unique()
@@ -68,10 +71,10 @@ def get_count_matrix_heatmap(matrix_df, out_file, group_dict, hsize, dendro=Fals
                bbox_to_anchor=legend_box,
                ncol=math.ceil(len(handles)/4),
                bbox_transform=plt.gcf().transFigure,
-               loc='upper center', title_fontsize=fontsize_scaled,
-               fontsize=fontsize_scaled)
+               loc='upper center')
+
     cm_heat.ax_heatmap.set_xlabel("")
-    cm_heat.savefig(out_file, dpi=200)
+    cm_heat.savefig(out_file, dpi=250)
 
 def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     """Generate PCA plot from TE count matrix.
@@ -91,6 +94,8 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     show_names : bool, default: False
         If True, the generated plot will show the name of each point.
     """
+    plt.rc('legend',fontsize="small")
+    plt.rc("legend",title_fontsize="large")
     #Standardization of data and 2-component PCA creation
     scaled_matrix = StandardScaler().fit_transform(matrix_df)
 
@@ -110,7 +115,6 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
     sns.scatterplot(data=pca_df, x=pca_df.PC1, y=pca_df.PC2,
                     hue="group", ax=ax)
     ax.legend(loc="center left", title="Groups",
-              fontsize=8,
               bbox_to_anchor=(1, 0.5))
     ax.set_xlabel(f"PC1 ({per_var[0]}%)")
     ax.set_ylabel(f"PC2 ({per_var[1]}%)")
@@ -137,7 +141,7 @@ def get_count_matrix_pca(matrix_df, out_file, group_dict, show_names=False):
             else:
                 va = "bottom"
             ax.annotate(species, (x_pos, y_pos), ha=ha, va=va,
-                        fontsize=7)
+                        fontsize="x-small", alpha=.7)
     fig.tight_layout()
     fig.savefig(out_file, dpi=300)
 
@@ -150,10 +154,14 @@ def get_divergence_boxplots(div_file, species_and_groups, out_fpath):
 
     species_and_groups : dictionary
         Contains the groups defined by the user. Keys: species;
-        values: group.
+        values: group. Species not included in this list
+        will be excluded
 
     out_fpath : output file path
     """
+    plt.rc('legend',fontsize="x-large",title_fontsize="x-large")
+    plt.rc('axes',titlesize="x-large")
+    plt.rc('axes',labelsize="x-large")
     sp_per_group = {}
     for k, v in species_and_groups.items():
         if v in sp_per_group:
@@ -164,6 +172,11 @@ def get_divergence_boxplots(div_file, species_and_groups, out_fpath):
 
     with open(div_file) as file:
         div_df = get_large_dfs(file)
+        species_in_df = list(div_df["species"].unique())
+        excluded_df_species = [species for species in species_in_df if species not in species_and_groups]
+        div_df = div_df[~div_df["species"].isin(excluded_df_species)]
+        div_df.species = div_df.species.cat.remove_unused_categories()
+        print(f"Species excluded from the analysis: {', '.join(excluded_df_species)}\n")
         cat_name = div_df.columns[1]
         cat = list(div_df[cat_name].unique())[0]
         div_df["group"] = div_df["species"].apply(lambda x: species_and_groups[x]).astype("category")
@@ -196,14 +209,14 @@ def get_divergence_boxplots(div_file, species_and_groups, out_fpath):
                          kind="box", aspect=plot_aspect, order=ordered_sp,
                          hue_order=list(sp_per_group.keys()),
                          dodge=False, sharex=True)
-    b_plot.set_xticklabels(rotation=90)
+    b_plot.set_xticklabels(rotation=90, fontsize = "x-large")
     sns.despine(bottom=True)
     b_plot.set(title=f"Divergence data for {cat}", 
                ylabel="% Divergence", xlabel="",
                axisbelow=True)
     b_plot.legend.set(title="Groups")
     b_plot.ax.yaxis.grid()
-    b_plot.savefig(out_fpath, dpi=200)
+    b_plot.savefig(out_fpath, dpi=300)
 
 def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
     """Generate violin plots given a long-form DataFrame.
@@ -222,17 +235,20 @@ def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
         given by the tree (which will also appear in the final figure).
 
     analyzed_species: list
-        List containing the names of the species to analyze
+        List containing the names of the species to analyze. Species not
+        included in this list will be excluded (only available when no
+        Newick tree file is given)
     
     out_file : output file path
     """
-
+    plt.rc('axes',titlesize="xx-large")  
+    plt.rc('axes',labelsize="large")
     #No tree file provided
     if not tree_fpath:
         #Creating main figure and subplots
         width, height = plt.rcParams.get("figure.figsize")
         fig, axs = plt.subplots(1, len(files_list),
-                                figsize=(len(files_list)*2, height*4),
+                                figsize=(len(files_list)*2.2, height*4),
                                 sharey=True, sharex=True,
                                 constrained_layout=True)
         #Create alphabetically ordered list
@@ -254,7 +270,13 @@ def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
 
             with open(file) as div_file:
                 div_df = get_large_dfs(div_file)
+                species_in_df = list(div_df["species"].unique())
+                excluded_df_species = [species for species in species_in_df if species not in analyzed_species]
+                div_df = div_df[~div_df["species"].isin(excluded_df_species)]
+                div_df.species = div_df.species.cat.remove_unused_categories()
+                print(f"Species excluded from the analysis: {', '.join(excluded_df_species)}\n")
                 cat_name = div_df.columns[1]
+                div_df[cat_name] = div_df[cat_name].cat.remove_unused_categories()
                 cat = list(div_df[cat_name].unique())[0]
                 print(f"Read data for {cat} divergence")
             sp_in_df = list(div_df["species"].unique())
@@ -287,6 +309,8 @@ def get_divergence_violins(files_list, tree_fpath, analyzed_species, out_file):
             ax.xaxis.set_ticks_position("bottom")
             if first_axes:
                 first_axes = False
+                ax.set_yticklabels(ax.get_ymajorticklabels(),fontsize="x-large")
+                ax.set_xticklabels(ax.get_xmajorticklabels(),fontsize="large")
             else:
                 ax.yaxis.set_ticks_position("none")
         for ax in axs[ax_count:]:

@@ -25,14 +25,59 @@ of reads for each type of ET found in its genome.
 ## Dependencies and installation
 ### Dependencies
 Dependencies for Repeattools are already specified in the [setup.py](./setup.py) of the repository. As a remainder:
-- Matplotlib version 3.7.3
-- Pandas version 2.0.3
-- Numpy version 1.25.1
-- Scipy version 1.11.1
-- Scikit-learn version 1.3.0
-- Seaborn version 0.12.2
-- PyQt5 version 5.15.9
-- Ete3 version 3.1.3
+
++ **At least Python version 3.10.11 (not tested on Python 3.12 onwards)**
+
+| Third-party library | Version |
+|---------------------|---------|
+| Matplotlib          | 3.7.3   |
+| Pandas              | 2.0.3   |
+| Numpy               | 1.25.1  |
+| Scipy               | 1.11.1  |
+| Scikit-learn        | 1.3.0   |
+| Seaborn             | 0.12.2  |
+| PyQt5               | 5.15.9  |
+| Ete3                | 3.1.3   |
+
+### Installation
+It is actually advised that the package is installed in virtual environment using [venv](https://docs.python.org/3.10/library/venv.html)
+
+To create a virtual environment, use the following command:
+```
+$ python -m venv path/to/myenv
+
+#To activate the virtual environment
+#POSIX
+$ source <myenv>/bin/activate
+
+#Windows
+$ <myenv>\Scripts\activate
+
+#To deactivate the virtual environment
+$ <myenv> deactivate
+```
+
+Once the virtual environment is set up and **activated**, proceed to download the repository:
+```
+$ <myenv> git clone https://github.com/AgustinAmata/Repeattools.git
+
+# Updates and merges your local work with the online repository
+$ <myenv> git pull Repeattools
+```
+
+To test that the installation was done correctly, use:
+```
+$ python -m unittest discover
+```
 
 ## Classification system of Repeattools
+
+
+## Analysis of RepeatMasker and TESorter with RECollector
+
+
+## ET profile comparison with REPlotCounts
+
+
+## ET divergence distribution comparison with REPlotDivergence
 

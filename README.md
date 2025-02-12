@@ -20,13 +20,14 @@ following:
 of reads for each type of ET found in its genome.
 - A PCA that also provides a form of comparing the ET profile.
 - Box plots that compare the divergence distribution of a given ET across several species and groups.
-- Violin plots that compare the divergence distribution of all ETs in a certain [classification level](##classification-system-of-Repeattools)
+- Violin plots that compare the divergence distribution of all ETs in a certain [classification level](#classification-system-of-Repeattools)
 
 ## Dependencies and installation
 ### Dependencies
 Dependencies for Repeattools are already specified in the [setup.py](./setup.py) of the repository. As a remainder:
 
-+ **At least Python version 3.10.11 (not tested on Python 3.12 onwards)**
++ **At least Python version 3.10.11 (not tested on Python 3.12 onwards, so I strongly suggest using
+Python 3.10 or 3.11)**
 
 | Third-party library | Version |
 |---------------------|---------|
@@ -40,7 +41,8 @@ Dependencies for Repeattools are already specified in the [setup.py](./setup.py)
 | Ete3                | 3.1.3   |
 
 ### Installation
-It is actually advised that the package is installed in virtual environment using [venv](https://docs.python.org/3.10/library/venv.html)
+
+The package can be installed in a virtual environment using [venv](https://docs.python.org/3.10/library/venv.html)
 
 To create a virtual environment, use the following command:
 ```
@@ -57,15 +59,20 @@ $ <myenv>\Scripts\activate
 $ <myenv> deactivate
 ```
 
-Once the virtual environment is set up and **activated**, proceed to download the repository:
+Once the virtual environment is set up and **activated**, proceed to download the repository in your preferred directory and execute setup.py:
 ```
-$ <myenv> git clone https://github.com/AgustinAmata/Repeattools.git
+$ git clone https://github.com/AgustinAmata/Repeattools.git
 
-# Updates and merges your local work with the online repository
-$ <myenv> git pull Repeattools
+#Go to the Repeattools directory
+$ cd path/to/Repeattools
+#Install dependencies from setup.py
+$ pip install .
+
+# (If there is any change in the repository) Updates and merges your local work with the online repository
+$ git pull Repeattools
 ```
 
-To test that the installation was done correctly, use:
+To test that the installation was done correctly, use the following command in the Repeattools directory:
 ```
 $ python -m unittest discover
 ```

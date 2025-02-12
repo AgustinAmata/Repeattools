@@ -78,7 +78,7 @@ $ python -m unittest discover
 ```
 
 ## Classification system of Repeattools
-Repeattools uses a hierarchical classification system of four levels: Class, subclass, superfamily, and element.
+Repeattools uses a hierarchical classification system of four levels: Class, Subclass, Superfamily, and Element.
 This classification system was created considering the classification system of RepeatMasker and TESorter.
 RECollector makes the conversion to this classification for each TE found in the RepeatMasker and TESorter files
 for each species.
@@ -92,11 +92,32 @@ Examples:
 |                  DNA/Maverick             |   Class_II  | DNA_Polymerase |      Maverick     |    Unknown    |
 |                  DNA/Casposons            |   Class_II  | DNA_Polymerase |      Casposon     |    Casposon   |
 
-
+Note: some TESorter detected TEs are converted into a RepeatMasker equivalent before being properly classified. Example:
+TIR/hAT is converted into RepeatMasker's DNA/hAT.
 
 ## Analysis of RepeatMasker and TESorter with RECollector
+RECollector is the first program to be used in the Repeattools package to analyze TEs. It outputs the following:
+- A TE count matrix for a certain classification level (that can be specified by the user - default is Superfamily)
+in which rows correspond to the different TEs in that level and columns correspond to the diffretent analyzed species.
+So, each element in the matrix correspond to the number of copies of a certain TE in a certain species.
+- A directory containing the divergence data files for each of the TEs and their copies in the genome of the different
+species analyzed in a certain classification level.
 
+### Directory data structure
+Before proceding with RECollector, the user must create the directory that is going to be analyzed. It must follow the
+following structure:
+```
+MainSpeciesDir
+├── Species1Dir
+│   ├── Species1_RepeatMasker_file.out
+│   └── Species1_TESorter_file.cls.tsv
+└── Species1Dir
+    ├── Species2_RepeatMasker_file.out
+    └── Species2_TESorter_file.cls.tsv
 
+#The name of the file does not matter, what matters is the file extension, so be sure to use the files from RepeatMasker
+#and TESorter that contain the correct extension (.out for RM, and .cls.tsv for TES)
+```
 ## ET profile comparison with REPlotCounts
 
 

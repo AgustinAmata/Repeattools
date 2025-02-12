@@ -22,6 +22,9 @@ of reads for each type of TE found in its genome.
 - Box plots that compare the divergence distribution of a given TE across several species and groups.
 - Violin plots that compare the divergence distribution of all TEs in a certain [classification level](#classification-system-of-Repeattools)
 
+Repeattools is composed of three programs: RECollector, REPlotCounts, and REPlotDivergence.
+They are explained later in the document.
+
 ## Dependencies and installation
 ### Dependencies
 Dependencies for Repeattools are already specified in the [setup.py](./setup.py) of the repository. As a remainder:
@@ -115,11 +118,41 @@ MainSpeciesDir
     ├── Species2_RepeatMasker_file.out
     └── Species2_TESorter_file.cls.tsv
 
-#The name of the file does not matter, what matters is the file extension, so be sure to use the files from RepeatMasker
-#and TESorter that contain the correct extension (.out for RM, and .cls.tsv for TES)
+#Be sure to use the files from RepeatMasker and TESorter that contain the correct extension
+#(.out for RM, and .cls.tsv for TES)
 ```
-## ET profile comparison with REPlotCounts
 
+### Names file structure
+Additionally, RECollector uses another tab-separated file to name each of the species for
+their representation in REPlotCounts and REPlotDivergence. Rows correspond to the different
+species, the first column corresponds to the directory name for that species and the second
+column corresponds to the chosen name for that species for its graphic representation.
+
+```
+dirname_species_1	species_1_name
+dirname_species_2	species_2_name
+```
+
+### Usage
+For a complete description of the program use:
+```
+python RECollector.py --help
+```
+
+Simple usage of the program is:
+```
+python RECollector.py -i MainSpeciesDir/ -n names_file
+```
+
+Additionally, the user can include the `--override` option. 
+## ET profile comparison with REPlotCounts
+For a complete description of the program use:
+```
+python REPlotCounts.py --help
+```
 
 ## ET divergence distribution comparison with REPlotDivergence
-
+For a complete description of the program use:
+```
+python REPlotDivergence.py --help
+```

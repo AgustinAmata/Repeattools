@@ -16,11 +16,11 @@ RepeatMasker and TESorter. Simply put, Repeattools processes the transposable el
 of the selected species and provides several forms of visualization. Specifically, it can output the
 following:
 
-- A heatmap comparing the ET profile of the different species. For a given species, this profile is composed of the number
-of reads for each type of ET found in its genome.
-- A PCA that also provides a form of comparing the ET profile.
-- Box plots that compare the divergence distribution of a given ET across several species and groups.
-- Violin plots that compare the divergence distribution of all ETs in a certain [classification level](#classification-system-of-Repeattools)
+- A heatmap comparing the TE profile of the different species. For a given species, this profile is composed of the number
+of reads for each type of TE found in its genome.
+- A PCA that also provides a form of comparing the TE profile.
+- Box plots that compare the divergence distribution of a given TE across several species and groups.
+- Violin plots that compare the divergence distribution of all TEs in a certain [classification level](#classification-system-of-Repeattools)
 
 ## Dependencies and installation
 ### Dependencies
@@ -78,6 +78,20 @@ $ python -m unittest discover
 ```
 
 ## Classification system of Repeattools
+Repeattools uses a hierarchical classification system of four levels: Class, subclass, superfamily, and element.
+This classification system was created considering the classification system of RepeatMasker and TESorter.
+RECollector makes the conversion to this classification for each TE found in the RepeatMasker and TESorter files
+for each species.
+
+Examples:
+
+| RepeatMasker/TESorter class/family column |    Class    |    Subclass    |    Superfamily    |    Element    |
+|-------------------------------------------|-------------|----------------|-------------------|---------------|
+|                  Unknown                  |   Unknown   |     Unknown    |      Unknown      |    Unknown    |
+|                  DNA                      |   Class_II  |     Unknown    |      Unknown      |    Unknown    |
+|                  DNA/Maverick             |   Class_II  | DNA_Polymerase |      Maverick     |    Unknown    |
+|                  DNA/Casposons            |   Class_II  | DNA_Polymerase |      Casposon     |    Casposon   |
+
 
 
 ## Analysis of RepeatMasker and TESorter with RECollector

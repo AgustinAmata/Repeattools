@@ -85,7 +85,7 @@ $ python -m unittest discover
 Repeattools uses a hierarchical classification system of four levels: Class, Subclass, Superfamily, and Element.
 This classification system was created considering the classification system of RepeatMasker and TESorter.
 RECollector makes the conversion to this classification for each TE found in the RepeatMasker and TESorter files
-for each species.
+for each species. Conversions can be consulted in [config.py](Repeattools/src/config.py).
 
 Examples:
 
@@ -135,14 +135,14 @@ dirname_species_2	species_2_name
 ```
 
 ### Usage
-For a complete description of the program use:
+For a complete description of the program and its options use:
 ```
 $ python RECollector.py --help
 ```
 
 Simple usage of the program is:
 ```
-$ python RECollector.py -i MainSpeciesDir/ -n names_file
+$ python RECollector.py -i MainSpeciesDir/ -n names_file -o out_file
 ```
 
 Additionally, the user can include the `--override` option. By adding this option, RECollector will
@@ -150,14 +150,36 @@ add to the classification information of Unknown copies of RepeatMasker the info
 TESorter for these same copies. `--override` also affects RepeatMasker TE copies that were only classified
 as Class_II if the correspondent information of TESorter matches.
 
+Example:
+
+Before `--override`:
+| TE Copy number |    Class    |    Subclass    |    Superfamily    |    Element    | TESorter Class/family |
+|----------------|-------------|----------------|-------------------|---------------|-----------------------|
+|        1       |   Unknown   |     Unknown    |      Unknown      |    Unknown    |        LINE/L1        |
+|        2       |   Class_II  |     Unknown    |      Unknown      |    Unknown    |    Maverick/Unknown   |
+|        3       |   Class_II  |     Unknown    |      Unknown      |    Unknown    |     LTR/Retrovirus    |
+|        4       |   Class_II  | DNA_Polymerase |      Casposon     |    Casposon   |       TIR/Merlin      |
+
+After `--override`:
+| TE Copy number |    Class    |    Subclass    |    Superfamily    |    Element    | TESorter Class/family |                   'overriden'                   |
+|----------------|-------------|----------------|-------------------|---------------|-----------------------|-------------------------------------------------|
+|        1       |   Class_I   |     LINE       | DFAM-LINE_group_II|    L1         |        LINE/L1        |            Yes (Initial Unknown copy)           |
+|        2       |   Class_II  | DNA_Polymerase |      Maverick     |    Unknown    |    Maverick/Unknown   |             Yes (Class_II-compatible)           |
+|        3       |   Class_II  |     Unknown    |      Unknown      |    Unknown    |     LTR/Retrovirus    |    No (Class_II not compatible with Class_I)    |
+|        4       |   Class_II  | DNA_Polymerase |      Casposon     |    Casposon   |       TIR/Merlin      | No (Copy already classified beyond Class level) |
+
 ## ET profile comparison with REPlotCounts
-For a complete description of the program use:
+For a complete description of the program and its options use:
 ```
 $ python REPlotCounts.py --help
 ```
 
+Simple usage of the program is:
+```
+$ python REPlotCounts.py -i MainSpeciesDir/ -n names_file
+```
 ## ET divergence distribution comparison with REPlotDivergence
-For a complete description of the program use:
+For a complete description of the program and its options use:
 ```
 $ python REPlotDivergence.py --help
 ```

@@ -177,7 +177,10 @@ In case something went wrong during the data processing, the log file will also 
 the abortion of the program.
 - A tab-separated file meant to be used with REPlotDivergence.
 
-## ET profile comparison with REPlotCounts
+## TE profile comparison with REPlotCounts
+
+
+### Usage
 For a complete description of the program and its options use:
 ```
 $ python REPlotCounts.py --help
@@ -205,14 +208,34 @@ species_1_name	group_2
 ```
 
 ### Outputs
-- A heatmap
-- A PCA
-Groups are color-indicated.
+- A heatmap (normalized by z-score) that allows to observe the TE profile of species and
+compare them with each other and between the same group/different groups. A dendrogram can
+be added with `--dendro`.
+- A PCA plot that can also help with inferring relationships between species/groups
+(percentage of variance explained by both principal components is provided to help with interpretation).
+The name of each species can also be plotted with `--names`.
 
-## ET divergence distribution comparison with REPlotDivergence
+Groups are color-coded.
+
+## TE divergence distribution comparison with REPlotDivergence
+
+
+### Usage 
+
 For a complete description of the program and its options use:
 ```
 $ python REPlotDivergence.py --help
 ```
+
+Simple usage of the program is:
+```
+# If the user only wants to create violin plots
+$ python REPlotDivergence.py -v DivergenceDir/ -n RECollector_names_file -o out_directory
+
+#If the user only wants to create box plots
+$ python REPlotDivergence.py -b DivergenceDir/<TE_to_analyze>_divergence.csv -g groups_file -o out_directory
+```
+**Notes: the groups file can be the same one used for REPlotCounts. The user can also create
+violin and box plots at the same time if they consider it.**
 
 ### Outputs

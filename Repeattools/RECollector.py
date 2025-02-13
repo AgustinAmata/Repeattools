@@ -88,7 +88,7 @@ def argument_parser():
     depth_choices = ["class","subclass", "superfamily", "element",
                      "tes_order", "tes_superfamily", "clade"]
     parser.add_argument("--depth", help=help_matrix_depth,
-                        choices=depth_choices,
+                        choices=depth_choices, type=str.lower,
                         default="superfamily", required=False)
     help_override = """When selected, unknown repeats from RepeatMasker will be
     rewritten with classification data from TESorter.

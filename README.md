@@ -46,8 +46,9 @@ Python 3.10 or 3.11)**
 ### Installation
 
 The package can be installed in a virtual environment using [venv](https://docs.python.org/3.10/library/venv.html)
+or the [conda package manager](https://docs.conda.io/projects/conda/en/stable/)
 
-To create a virtual environment, use the following command:
+To create a virtual environment using venv, use the following commands:
 ```
 $ python -m venv path/to/myenv
 
@@ -136,23 +137,27 @@ dirname_species_2	species_2_name
 ### Usage
 For a complete description of the program use:
 ```
-python RECollector.py --help
+$ python RECollector.py --help
 ```
 
 Simple usage of the program is:
 ```
-python RECollector.py -i MainSpeciesDir/ -n names_file
+$ python RECollector.py -i MainSpeciesDir/ -n names_file
 ```
 
-Additionally, the user can include the `--override` option. 
+Additionally, the user can include the `--override` option. By adding this option, RECollector will
+add to the classification information of Unknown copies of RepeatMasker the information retrieved by
+TESorter for these same copies. `--override` also affects RepeatMasker TE copies that were only classified
+as Class_II if the correspondent information of TESorter matches.
+
 ## ET profile comparison with REPlotCounts
 For a complete description of the program use:
 ```
-python REPlotCounts.py --help
+$ python REPlotCounts.py --help
 ```
 
 ## ET divergence distribution comparison with REPlotDivergence
 For a complete description of the program use:
 ```
-python REPlotDivergence.py --help
+$ python REPlotDivergence.py --help
 ```

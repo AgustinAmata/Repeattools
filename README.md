@@ -14,7 +14,7 @@ Repeattools is a package created in Python that tries to address this problem.
 It is designed to perform statistical analysis and visualization on the output of the programs
 RepeatMasker and TESorter. Simply put, Repeattools processes the transposable element landscape
 of the selected species and provides several forms of visualization. Specifically, it can output the
-following:
+following figures:
 
 - A heatmap comparing the TE profile of the different species. For a given species, this profile is composed of the number
 of reads for each type of TE found in its genome.
@@ -102,34 +102,6 @@ TIR/hAT is converted into RepeatMasker's DNA/hAT.
 ## Analysis of RepeatMasker and TESorter with RECollector
 RECollector is the first program to be used in the Repeattools package to analyze TEs.
 
-
-### Directory data structure
-Before proceding with RECollector, the user must create the directory that is going to be analyzed. It must follow the
-following structure:
-```
-MainSpeciesDir
-├── Species1Dir
-│   ├── Species1_RepeatMasker_file.out
-│   └── Species1_TESorter_file.cls.tsv
-└── Species1Dir
-    ├── Species2_RepeatMasker_file.out
-    └── Species2_TESorter_file.cls.tsv
-
-#Be sure to use the files from RepeatMasker and TESorter that contain the correct extension
-#(.out for RM, and .cls.tsv for TES)
-```
-
-### Names file structure
-Additionally, RECollector uses another tab-separated file to name each of the species for
-their representation in REPlotCounts and REPlotDivergence. Rows correspond to the different
-species, the first column corresponds to the directory name for that species and the second
-column corresponds to the chosen name for that species for its graphic representation.
-
-```
-dirname_species_1	species_1_name
-dirname_species_2	species_2_name
-```
-
 ### Usage
 For a complete description of the program and its options use:
 ```
@@ -164,10 +136,36 @@ After `--override`:
 |        3       |   Class_II  |     Unknown    |      Unknown      |    Unknown    |     LTR/Retrovirus    |    No (Class_II not compatible with Class_I)    |
 |        4       |   Class_II  | DNA_Polymerase |      Casposon     |    Casposon   |       TIR/Merlin      | No (Copy already classified beyond Class level) |
 
-Additionally, the user can also include the `--depth` option followed by one of the choices included in the program,
-which can be known by consulting `python RECollector.py --help`. If `--depth` is not included, RECollector, by default,
-will create its outputs based on the Superfamily classification level.
+Additionally, the user can also include the `--depth` option followed by one of the choices included in the program
+(e.g., `--depth class`), which can be known by consulting `python RECollector.py --help`.
+If `--depth` is not included, RECollector, by default, will create its outputs based on the Superfamily classification level.
 
+### Directory data structure
+Before proceding with RECollector, the user must create the directory that is going to be analyzed. It must follow the
+following structure:
+```
+MainSpeciesDir
+├── Species1Dir
+│   ├── Species1_RepeatMasker_file.out
+│   └── Species1_TESorter_file.cls.tsv
+└── Species1Dir
+    ├── Species2_RepeatMasker_file.out
+    └── Species2_TESorter_file.cls.tsv
+
+#Be sure to use the files from RepeatMasker and TESorter that contain the correct extension
+#(.out for RM, and .cls.tsv for TES)
+```
+
+### Names file structure
+Additionally, RECollector uses another tab-separated file to name each of the species for
+their representation in REPlotCounts and REPlotDivergence. Rows correspond to the different
+species, the first column corresponds to the directory name for that species and the second
+column corresponds to the chosen name for that species for its graphic representation.
+
+```
+dirname_species_1	species_1_name
+dirname_species_2	species_2_name
+```
 ### Outputs
 - A TE count matrix for a certain classification level (that can be specified by the user with `--depth`)
 in which rows correspond to the different TEs in that level and columns correspond to the diffretent analyzed species.
@@ -187,8 +185,12 @@ $ python REPlotCounts.py --help
 
 Simple usage of the program is:
 ```
-$ python REPlotCounts.py -i MainSpeciesDir/ -n names_file
+$ python REPlotCounts.py -i TECountMatrix.csv -g groups_file -o out_directory/
 ```
+
+The user can also specify the size of the heatmap with the `--hsize` option followed by two numbers
+separated by a space, the first number specifies the width whereas the second specifies the height
+(e.g., `--hsize 20 13`). By default, heatmaps are 15 inches wide and 15 inches tall.
 
 ### Groups file structure
 Additionally, REPlotCounts uses a tab-separated file to group the different species.
@@ -202,8 +204,15 @@ species_1_name	group_2
 species_1_name	group_2
 ```
 
+### Outputs
+- A heatmap
+- A PCA
+Groups are color-indicated.
+
 ## ET divergence distribution comparison with REPlotDivergence
 For a complete description of the program and its options use:
 ```
 $ python REPlotDivergence.py --help
 ```
+
+### Outputs

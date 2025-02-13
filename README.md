@@ -100,12 +100,8 @@ Note: some TESorter detected TEs are converted into a RepeatMasker equivalent be
 TIR/hAT is converted into RepeatMasker's DNA/hAT.
 
 ## Analysis of RepeatMasker and TESorter with RECollector
-RECollector is the first program to be used in the Repeattools package to analyze TEs. It outputs the following:
-- A TE count matrix for a certain classification level (that can be specified by the user - default is Superfamily)
-in which rows correspond to the different TEs in that level and columns correspond to the diffretent analyzed species.
-So, each element in the matrix correspond to the number of copies of a certain TE in a certain species.
-- A directory containing the divergence data files for each of the TEs and their copies in the genome of the different
-species analyzed in a certain classification level.
+RECollector is the first program to be used in the Repeattools package to analyze TEs.
+
 
 ### Directory data structure
 Before proceding with RECollector, the user must create the directory that is going to be analyzed. It must follow the
@@ -145,7 +141,7 @@ Simple usage of the program is:
 $ python RECollector.py -i MainSpeciesDir/ -n names_file -o out_file
 ```
 
-Additionally, the user can include the `--override` option. By adding this option, RECollector will
+The user can include the `--override` option so that RECollector can
 add to the classification information of Unknown copies of RepeatMasker the information retrieved by
 TESorter for these same copies. `--override` also affects RepeatMasker TE copies that were only classified
 as Class_II if the correspondent information of TESorter matches.
@@ -168,6 +164,21 @@ After `--override`:
 |        3       |   Class_II  |     Unknown    |      Unknown      |    Unknown    |     LTR/Retrovirus    |    No (Class_II not compatible with Class_I)    |
 |        4       |   Class_II  | DNA_Polymerase |      Casposon     |    Casposon   |       TIR/Merlin      | No (Copy already classified beyond Class level) |
 
+Additionally, the user can also include the `--depth` option followed by one of the choices included in the program,
+which can be known by consulting `python RECollector.py --help`. If `--depth` is not included, RECollector, by default,
+will create its outputs based on the Superfamily classification level.
+
+### Outputs
+- A TE count matrix for a certain classification level (that can be specified by the user with `--depth`)
+in which rows correspond to the different TEs in that level and columns correspond to the diffretent analyzed species.
+So, each element in the matrix correspond to the number of copies of a certain TE in a certain species.
+- A directory containing the divergence data files for each of the TEs and their copies in the genome of the different
+species analyzed in a certain classification level.
+- A log file containing information on the command that was run, the process flow of the program, and additional stuff.
+In case something went wrong during the data processing, the log file will also contain information of the error that caused
+the abortion of the program.
+- A tab-separated file meant to be used with REPlotDivergence.
+
 ## ET profile comparison with REPlotCounts
 For a complete description of the program and its options use:
 ```
@@ -178,6 +189,19 @@ Simple usage of the program is:
 ```
 $ python REPlotCounts.py -i MainSpeciesDir/ -n names_file
 ```
+
+### Groups file structure
+Additionally, REPlotCounts uses a tab-separated file to group the different species.
+Rows correspond to the different species, the first column corresponds to the name of the species
+(which must be the same name given to the species when processed with RECollector)
+and the second column corresponds to the chosen group for that species.
+
+```
+species_1_name	group_1
+species_1_name	group_2
+species_1_name	group_2
+```
+
 ## ET divergence distribution comparison with REPlotDivergence
 For a complete description of the program and its options use:
 ```

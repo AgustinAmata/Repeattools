@@ -1,4 +1,5 @@
 # Repeattools: analysis of transposable elements across species
+- [ ] ***Add bibliography***
 - [ ] ***Add authors and contributions***
 - [ ] ***Add info on filtering options for RECollector***
 ## Introduction
@@ -226,7 +227,11 @@ The name of each species can also be plotted with `--names`.
 Groups are color-coded.
 
 ## TE divergence distribution comparison with REPlotDivergence
-
+Divergence can be defined as the process by which two identical, separate sequences begin to differ as time passes.
+RepeatMasker calculates the divergence of a TE copy as the percentage of difference with respect to a consensus
+sequence. The greater the percentage is, the earlier this copy was inserted in the host genome (and viceversa).
+REPlotDivergence offers a way to compare these distributions by using violin plots that show the whole TE
+landscape of every species, and box plots that allow to observe more precisely the distribution of a certain TE.
 
 ### Usage 
 

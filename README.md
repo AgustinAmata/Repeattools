@@ -1,7 +1,11 @@
 # Repeattools: analysis of transposable elements across species
-- [ ] ***Add bibliography***
-- [ ] ***Add authors and contributions***
 - [ ] ***Add info on filtering options for RECollector***
+
+## Authors and contributions
+The program was developed and written by me. Dr. Aureliano Bombarely Gómez was the experimental director
+of my thesis, and provided advice through the development of the project. Víctor García Carpintero-Burgos
+provided support and advice on the code.
+
 ## Introduction
 Transposable elements (TEs) or transposons are DNA mobile elements with a great
 ability to move across the genome and intervene in its structure and evolution, representing a
@@ -15,7 +19,7 @@ of different copies of a given TE in different genomes.
 
 Repeattools is a package created in Python that tries to address this problem.
 It is designed to perform statistical analysis and visualization on the output of the programs
-RepeatMasker and TESorter. Simply put, Repeattools processes the transposable element landscape
+[RepeatMasker](https://github.com/Dfam-consortium/RepeatMasker) and [TESorter](https://github.com/zhangrengang/TEsorter). Simply put, Repeattools processes the transposable element landscape
 of the selected species and provides several forms of visualization. Specifically, it can output the
 following figures:
 
@@ -261,3 +265,7 @@ there exists an `--exclude` option that excludes unknown and other repetitive el
 - The `--tree` option for violin plots in REPlotDivergence allows to combine these violin plots
 with a phylogenetic tree by providing a tree file in Newick format. However, this is discouraged
 as this option has not been correctly implemented yet.
+
+## Bibliography
+- Smit, AFA, Hubley, R & Green, P. RepeatMasker Open-4.0. 2013-2015 http://www.repeatmasker.org.
+- Zhang, R., Li, G., Wang, X., Dainat, J., Wang, Z., Ou, S., & Ma, Y. (2022). TEsorter: An accurate and fast method to classify LTR-retrotransposons in plant genomes. Horticulture Research, 9. https://doi.org/10.1093/hr/uhac017
